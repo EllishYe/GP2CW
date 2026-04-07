@@ -1,6 +1,7 @@
 ﻿
 using System.Collections;
 using System.Collections.Generic;
+using Unity.AI.Navigation;
 using UnityEngine;
 
 
@@ -18,6 +19,7 @@ public class TestCityBuilder : MonoBehaviour
     public List<CarSpawnData> carSpawnPool;
     public int carCount = 5; 
     public float spawnDelay = 0f;  //每2秒生成一辆车
+    public NavMeshSurface navMeshSurface;
 
     //void Start()
     //{
@@ -68,8 +70,19 @@ public class TestCityBuilder : MonoBehaviour
         // 让交通局去缝合地图
         myCityGraph.BuildGraphFromScene();
 
+        //GetComponent<NavMeshSurface>().BuildNavMesh();
+        if (navMeshSurface != null)
+        {
+            // 这句话会瞬间扫描全城，但只在 Layer 为 Sidewalk 的物体表面生成蓝色的网格！
+            navMeshSurface.BuildNavMesh();
+            Debug.Log("🌐 寻路网格动态烘焙完毕！");
+        }
+
         //生成车辆
         StartCoroutine(SpawnCars(myCityGraph));
+
+        //生成行人
+        FindAnyObjectByType<PedestrianManager>().SpawnCityPedestrians();
 
 
     }

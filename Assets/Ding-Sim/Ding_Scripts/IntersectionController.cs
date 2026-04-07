@@ -96,7 +96,8 @@ public class IntersectionController : MonoBehaviour
     {
         foreach (LaneData lane in lanes)
         {
-            if (lane != null) lane.isRedLight = isRed;
+            //if (lane != null) lane.isRedLight = isRed;
+            lane.SetLightStatus(isRed);
         }
     }
 }

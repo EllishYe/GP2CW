@@ -8,68 +8,99 @@ public class PedestrianAI : MonoBehaviour
     private NavMeshAgent agent;
     private Animator animator;
 
-    [Header("漫游设置")]
-    public float wanderRadius = 10f; // 漫游半径（10米内随机溜达）
-    public float minWaitTime = 2f;   // 到了目的地发呆的最短时间
-    public float maxWaitTime = 5f;   // 发呆的最长时间
+    [Header("真实通勤设置")]
+    public float minWaitTime = 1f;   // 等红绿灯/发呆的最短时间
+    public float maxWaitTime = 4f;   // 发呆的最长时间
+    public float maxTravelDistance = 50f; // 限制单次出行的最远距离，避免跨越全城走断腿
 
     private float waitTimer;
     private bool isWaiting = false;
+
+    // 全城的兴趣点缓存
+    private static Transform[] allCityPOIs;
+    private Transform currentDestination;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
-        // 游戏开始时，先原地发呆一小会儿再开始走
+        // 1. 性能优化：全城小人共享一份 POI 名单，不需要每个人都去搜一遍
+        if (allCityPOIs == null || allCityPOIs.Length == 0)
+        {
+            GameObject[] poiObjects = GameObject.FindGameObjectsWithTag("PedestrianPOI");
+            allCityPOIs = new Transform[poiObjects.Length];
+            for (int i = 0; i < poiObjects.Length; i++)
+            {
+                allCityPOIs[i] = poiObjects[i].transform;
+            }
+
+            if (allCityPOIs.Length == 0)
+            {
+                Debug.LogError("🚨 城市里没有行人兴趣点！请在人行道上放置空物体并打上 'PedestrianPOI' 标签！");
+            }
+        }
+
         waitTimer = Random.Range(0f, maxWaitTime);
         isWaiting = true;
     }
 
     void Update()
     {
-        // 🚨 核心魔法：把双腿真实的移动速度，实时发送给动画神经！
         animator.SetFloat("Speed", agent.velocity.magnitude);
 
-        // 如果在发呆等待
         if (isWaiting)
         {
             waitTimer -= Time.deltaTime;
             if (waitTimer <= 0)
             {
                 isWaiting = false;
-                SetNewRandomDestination(); // 时间到了，找个新地方去
+                SetLogicalDestination(); // 时间到了，出发去下一个目标！
             }
         }
         else
         {
-            // 如果还没到目标点，画一条红线方便你观察它的目的地！
-            if (agent.hasPath)
+            if (agent.hasPath && currentDestination != null)
             {
-                Debug.DrawLine(transform.position + Vector3.up, agent.destination + Vector3.up, Color.red);
+                // 用绿线画出它的长途通勤目标
+                Debug.DrawLine(transform.position + Vector3.up, currentDestination.position + Vector3.up, Color.green);
             }
 
-            // 如果快走到目的地了（剩余距离 < 停止距离）
             if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
             {
-                isWaiting = true; // 停下来
-                waitTimer = Random.Range(minWaitTime, maxWaitTime); // 重新随机发呆时间
+                isWaiting = true;
+                waitTimer = Random.Range(minWaitTime, maxWaitTime);
             }
         }
     }
 
-    // 找随机目标点的方法
-    private void SetNewRandomDestination()
+    // 🚨 核心逻辑：找一个符合人类逻辑的目的地
+    private void SetLogicalDestination()
     {
-        // 在自己周围的一个球体范围内随机抓一个点
-        Vector3 randomDirection = UnityEngine.Random.insideUnitSphere * wanderRadius;
-        randomDirection += transform.position;
+        if (allCityPOIs == null || allCityPOIs.Length == 0) return;
 
-        NavMeshHit hit;
-        // 把空中随机点“拍”在蓝色的 NavMesh 网格上
-        if (NavMesh.SamplePosition(randomDirection, out hit, wanderRadius, 1))
+        Transform bestTarget = null;
+        int maxAttempts = 10; // 找 10 次，找不到合适的就随便去一个，防止死循环
+
+        for (int i = 0; i < maxAttempts; i++)
         {
-            agent.SetDestination(hit.position); // 下达走路命令！
+            // 随机抽一个全城兴趣点
+            Transform randomPOI = allCityPOIs[Random.Range(0, allCityPOIs.Length)];
+
+            // 1. 距离过滤：不能选自己脚下现在的点，也不能选太远的点
+            float distance = Vector3.Distance(transform.position, randomPOI.position);
+
+            if (distance > 2f && distance < maxTravelDistance)
+            {
+                bestTarget = randomPOI;
+                break;
+            }
         }
+
+        // 如果上面没找到合适的，就兜底选第一个
+        if (bestTarget == null) bestTarget = allCityPOIs[Random.Range(0, allCityPOIs.Length)];
+
+        currentDestination = bestTarget;
+        agent.SetDestination(currentDestination.position);
     }
 }
