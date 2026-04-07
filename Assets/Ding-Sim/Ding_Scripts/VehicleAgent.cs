@@ -84,20 +84,26 @@ public class VehicleAgent : MonoBehaviour
     private void Sensor()
     {
         bool isPathClear = true;
-
-        // 计算雷达发射点，将其转换到世界坐标
         Vector3 sensorStartPos = transform.TransformPoint(sensorOffset);
 
         // 向前发射隐形的射线
+        float castRadius = 1.5f;
         RaycastHit hit;
-        if (Physics.Raycast(sensorStartPos, transform.forward, out hit, sensorLength))
+
+        if (Physics.SphereCast(sensorStartPos, castRadius, transform.forward, out hit, sensorLength))
         {
-            // 如果碰到了 Tag 为 "Vehicle" 的物体
             if (hit.collider.CompareTag("Vehicle"))
             {
                 isPathClear = false;
-                // 在 Scene 窗口画一条红线，方便你 Debug
+                currentState = CarState.Braking;
                 Debug.DrawRay(sensorStartPos, transform.forward * hit.distance, Color.red);
+            }
+            
+            else if (hit.collider.CompareTag("Pedestrian"))
+            {
+                isPathClear = false;
+                currentState = CarState.Yielding; // 切入避让状态
+                Debug.DrawRay(sensorStartPos, transform.forward * hit.distance, Color.yellow); // 画黄线警示
             }
         }
 
@@ -105,13 +111,11 @@ public class VehicleAgent : MonoBehaviour
         {
             // 前方畅通，平滑加速到最高限速
             Debug.DrawRay(sensorStartPos, transform.forward * sensorLength, Color.green);
-            //currentSpeed = Mathf.Lerp(currentSpeed, maxSpeed, Time.deltaTime * 2f);
-            currentState = CarState.Driving;
-        }
-        else
-        {
-            // 发现前车！紧急刹车跟车
-            currentState = CarState.Braking;
+
+            if (currentState == CarState.Braking || currentState == CarState.Yielding)
+            {
+                currentState = CarState.Driving; // 只有在跟车或避让结束后，才允许重新踩油门
+            }
         }
     }
 
@@ -190,5 +194,34 @@ public class VehicleAgent : MonoBehaviour
         {
             currentLane = null;
         }
+    }
+
+    //画senser探针
+    void OnDrawGizmos()
+    {
+        // 如果游戏还没运行，或者车没被初始化，就不画
+        if (!Application.isPlaying) return;
+
+        Vector3 sensorStartPos = transform.TransformPoint(sensorOffset);
+        float castRadius = 1.5f;
+
+        // 根据当前状态决定雷达的颜色
+        if (currentState == CarState.Braking)
+            Gizmos.color = Color.red;
+        else if (currentState == CarState.Yielding)
+            Gizmos.color = Color.yellow;
+        else
+            Gizmos.color = Color.green;
+
+        // 1. 画出雷达发射点（车头）的那个球
+        Gizmos.DrawWireSphere(sensorStartPos, castRadius);
+
+        // 2. 画出雷达终点（探测极限距离）的那个球
+        Vector3 sensorEndPos = sensorStartPos + transform.forward * sensorLength;
+        Gizmos.DrawWireSphere(sensorEndPos, castRadius);
+
+        // 3. 把起点和终点连起来，你就看懂这个“粗面条”有多粗了！
+        Gizmos.DrawLine(sensorStartPos + transform.right * castRadius, sensorEndPos + transform.right * castRadius);
+        Gizmos.DrawLine(sensorStartPos - transform.right * castRadius, sensorEndPos - transform.right * castRadius);
     }
 }
