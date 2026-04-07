@@ -1,0 +1,4 @@
+repository "GP2/GP2@5773939087361@cloud"
+  path "/"
+    br "/main"
+    co "/main"

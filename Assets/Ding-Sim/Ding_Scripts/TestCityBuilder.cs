@@ -55,6 +55,14 @@ public class TestCityBuilder : MonoBehaviour
 
     void Start()
     {
+
+        IntersectionController[] allIntersections = FindObjectsByType<IntersectionController>(FindObjectsSortMode.None);
+        foreach (var intersection in allIntersections)
+        {
+            intersection.AutoDetectIncomingLanes(); // 给每个路口通电开机！
+        }
+
+
         TrafficGraph myCityGraph = BuildSplitRoad();
 
         // 让交通局去缝合地图
@@ -62,6 +70,8 @@ public class TestCityBuilder : MonoBehaviour
 
         //生成车辆
         StartCoroutine(SpawnCars(myCityGraph));
+
+
     }
 
     // ⚠️ 注意：这里多加了一个参数 startLane

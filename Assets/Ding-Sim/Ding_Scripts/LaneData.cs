@@ -10,9 +10,6 @@ public class LaneData : MonoBehaviour
     public List<Transform> pathPoints = new List<Transform>();   // 这条路的路径点列表，车辆会沿着这些点行驶
     public List<LaneData> nextLanes = new List<LaneData>();
     
-    
-    public bool hasStopLine;
-    public Vector3 stopLinePos;
     public bool hasTrafficLight;
     public int trafficLightGroupId = -1;
 
@@ -20,4 +17,5 @@ public class LaneData : MonoBehaviour
     public bool isIntersectionLane;
 
     public bool isRedLight = false;
+    public Transform stopLinePoint;
 }

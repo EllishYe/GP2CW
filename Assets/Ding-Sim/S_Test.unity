@@ -155,13 +155,12 @@ MonoBehaviour:
   - {fileID: 598118257}
   - {fileID: 1381402919}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &12005459
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -325,13 +324,12 @@ MonoBehaviour:
   - {fileID: 720664697}
   - {fileID: 73433337}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &69806805
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -668,7 +666,11 @@ MonoBehaviour:
   carSpawnPool:
   - carPrefab: {fileID: 7110719259807306427, guid: ef8a7e9226a89884c9063e106f31f698, type: 3}
     spawnWeight: 54
-  carCount: 10
+  - carPrefab: {fileID: 703140248716496178, guid: 3aff623c24b19484b9c0baf78c45500a, type: 3}
+    spawnWeight: 54
+  - carPrefab: {fileID: 3067305882098106104, guid: defd2ca6e17c6c64e9e859e01ee1a524, type: 3}
+    spawnWeight: 54
+  carCount: 15
   spawnDelay: 0
 --- !u!4 &92574625
 Transform:
@@ -738,13 +740,12 @@ MonoBehaviour:
   - {fileID: 396105644}
   - {fileID: 1905827479}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &100919649
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -877,13 +878,12 @@ MonoBehaviour:
   - {fileID: 834244106}
   - {fileID: 1221566017}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &152153410
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1047,13 +1047,12 @@ MonoBehaviour:
   - {fileID: 1040304085}
   - {fileID: 1884289189}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &161253329
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1217,13 +1216,12 @@ MonoBehaviour:
   - {fileID: 1687165002}
   - {fileID: 1967693047}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &181762995
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1449,13 +1447,12 @@ MonoBehaviour:
   - {fileID: 696028460}
   - {fileID: 827994555}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &344617354
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1619,13 +1616,12 @@ MonoBehaviour:
   - {fileID: 984502105}
   - {fileID: 1408228230}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &388477464
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1995,13 +1991,12 @@ MonoBehaviour:
   - {fileID: 1762415153}
   - {fileID: 1142065861}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &554702025
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2756,13 +2751,12 @@ MonoBehaviour:
   - {fileID: 2107261593}
   - {fileID: 2105371280}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &810525161
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -3450,13 +3444,12 @@ MonoBehaviour:
   - {fileID: 398904772}
   - {fileID: 1764076551}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1108779403
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -3702,13 +3695,12 @@ MonoBehaviour:
   - {fileID: 1421706661}
   - {fileID: 884582087}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1138683574
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -3903,13 +3895,12 @@ MonoBehaviour:
   - {fileID: 61297610}
   - {fileID: 1670408673}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1316979526
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4042,13 +4033,12 @@ MonoBehaviour:
   - {fileID: 1770087165}
   - {fileID: 163497283}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1342262561
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4181,13 +4171,12 @@ MonoBehaviour:
   - {fileID: 1536774901}
   - {fileID: 193838572}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1351554664
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4602,13 +4591,12 @@ MonoBehaviour:
   - {fileID: 1801841624}
   - {fileID: 382366960}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1548292967
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4741,13 +4729,12 @@ MonoBehaviour:
   - {fileID: 1822046770}
   - {fileID: 1671394367}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1553297172
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -4993,13 +4980,12 @@ MonoBehaviour:
   - {fileID: 1053982423}
   - {fileID: 228361879}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1598133484
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5132,13 +5118,12 @@ MonoBehaviour:
   - {fileID: 1085204146}
   - {fileID: 70205359}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1638368181
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5675,6 +5660,7 @@ GameObject:
   - component: {fileID: 1777795042}
   - component: {fileID: 1777795041}
   - component: {fileID: 1777795040}
+  - component: {fileID: 1777795044}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -5776,6 +5762,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1777795044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1777795039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6770799df37323d4a8cbb85eca17bbbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IntersectionController
+  phase1Lanes: []
+  phase2Lanes: []
+  greenLightTime: 8
+  clearanceTime: 2
+  detectionRadius: 12
 --- !u!1 &1801841623
 GameObject:
   m_ObjectHideFlags: 0
@@ -5973,13 +5976,12 @@ MonoBehaviour:
   - {fileID: 458144944}
   - {fileID: 781712326}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 1
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1821950245
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6488,13 +6490,12 @@ MonoBehaviour:
   - {fileID: 159897016}
   - {fileID: 1032741337}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1949551435
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6610,13 +6611,12 @@ MonoBehaviour:
   - {fileID: 789985706}
   - {fileID: 967382274}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1956958957
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6766,13 +6766,12 @@ MonoBehaviour:
   - {fileID: 300985823}
   - {fileID: 552479258}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &1967570428
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -7082,13 +7081,12 @@ MonoBehaviour:
   - {fileID: 677362505}
   - {fileID: 1368776961}
   nextLanes: []
-  hasStopLine: 0
-  stopLinePos: {x: 0, y: 0, z: 0}
   hasTrafficLight: 0
   trafficLightGroupId: -1
   parentPieceId: -1
   isIntersectionLane: 0
   isRedLight: 0
+  stopLinePoint: {fileID: 0}
 --- !u!64 &2054656288
 MeshCollider:
   m_ObjectHideFlags: 0
