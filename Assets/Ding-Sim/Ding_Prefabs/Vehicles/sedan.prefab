@@ -90,7 +90,7 @@ MonoBehaviour:
   currentState: 0
   maxSpeed: 0
   turnSpeed: 10
-  sensorLength: 2
+  sensorLength: 1
   sensorOffset: {x: 0, y: 0.5, z: 1.8}
 --- !u!54 &4790893438858998359
 Rigidbody:
