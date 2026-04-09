@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GraphModel
 {
-    class Edge
+     public class Edge
     {
         public Node NodeA { get; private set; }
         public Node NodeB { get; private set; }

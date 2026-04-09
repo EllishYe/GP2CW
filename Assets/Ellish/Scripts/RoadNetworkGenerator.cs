@@ -55,6 +55,8 @@ public class RoadNetworkGenerator : MonoBehaviour
 
         minorGen.Run();
 
+        RoadNetworkData data = GraphConverter.Convert(graph);// Convert the graph to RoadData
+
         Debug.Log("Road Network Generated!");
     }
 

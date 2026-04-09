@@ -83,12 +83,16 @@ public class RoadVisualizer : MonoBehaviour
         }
 #endif
 
-        // Nodes
+        // Nodes£¨use GraphConverter output£©
         Gizmos.color = nodeColor;
-        foreach (var node in graph.MajorNodes)
+        var network = GraphConverter.Convert(graph);
+        if (network != null && network.nodes != null)
         {
-            Vector3 pos = new Vector3(node.X, node.Y, 0);
-            Gizmos.DrawSphere(pos, nodeSize);
+            foreach (var jd in network.nodes)
+            {
+                Vector3 pos = new Vector3(jd.position.x, jd.position.y, 0);
+                Gizmos.DrawSphere(pos, nodeSize);
+            }
         }
     }
 }
