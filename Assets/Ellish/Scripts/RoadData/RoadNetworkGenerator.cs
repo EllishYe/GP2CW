@@ -1,7 +1,8 @@
-using UnityEngine;
 using GraphModel;
 using RoadGeneration;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class RoadNetworkGenerator : MonoBehaviour
 {
@@ -18,6 +19,9 @@ public class RoadNetworkGenerator : MonoBehaviour
     public float deletionProbability = 0.2f;
 
     private Graph graph;
+
+    public List<LaneGeometry> lanes;
+
 
     void Start()
     {
@@ -43,7 +47,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         majorGen.Run();
         var majorSegments = majorGen.GetRoadSegments();
 
-        // Genera
+        // Generate minor roads
         MinorGenerator minorGen = new MinorGenerator(
             rand,
             mapSize,
@@ -58,6 +62,10 @@ public class RoadNetworkGenerator : MonoBehaviour
         RoadNetworkData data = GraphConverter.Convert(graph);// Convert the graph to RoadData
 
         Debug.Log("Road Network Generated!");
+
+        // Generate Lanes from the graph's edges
+        lanes = LaneGenerator.GenerateLanes(graph);
+        Debug.Log("Lane count: " + lanes.Count);
     }
 
     internal Graph GetGraph()
