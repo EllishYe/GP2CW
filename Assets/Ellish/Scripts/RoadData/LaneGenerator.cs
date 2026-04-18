@@ -11,8 +11,8 @@ public static class LaneGenerator
 {
     public static List<LaneGeometry> GenerateLanes(
         Graph graph,
-        float cutDistance = 1f,// Junction Radius + safety margin（原来是8）
-        float laneOffset = 1f// Lane width/2（原来是4）
+        float cutDistance = 0.6f,// Junction Radius + safety margin（原来是8）
+        float laneOffset = 0.3f// Lane width/2（原来是4）
         )
     {
         List<LaneGeometry> lanes = new List<LaneGeometry>();

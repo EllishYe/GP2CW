@@ -220,7 +220,7 @@ MonoBehaviour:
   majorLineThickness: 2
   minorLineColor: {r: 0.23429158, g: 0.5792961, b: 0.764151, a: 1}
   minorLineThickness: 3.48
-  nodeColor: {r: 1, g: 0, b: 0, a: 1}
+  nodeColor: {r: 1, g: 0.9295865, b: 0, a: 1}
   nodeSize: 0.2
 --- !u!114 &1263235031
 MonoBehaviour:
@@ -236,8 +236,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LaneVisualizer
   generator: {fileID: 995044733}
   lanes: []
-  colorForward: {r: 0, g: 1, b: 0, a: 1}
-  colorBackward: {r: 0, g: 0, b: 1, a: 1}
+  colorForward: {r: 0.9472873, g: 1, b: 0, a: 1}
+  colorBackward: {r: 0.9490196, g: 1, b: 0, a: 1}
+  showEndpoints: 1
+  startPointColor: {r: 1, g: 0.49694997, b: 0, a: 1}
+  endPointColor: {r: 1, g: 0, b: 0, a: 1}
+  endpointSize: 0.2
 --- !u!1 &1641105439
 GameObject:
   m_ObjectHideFlags: 0
