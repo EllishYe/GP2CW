@@ -22,7 +22,7 @@ public class LaneVisualizer : MonoBehaviour
         endpointSize = Mathf.Max(0.01f, endpointSize);
     }
 
-        void Update()
+    void Update()
     {
         // 在运行时保证实时同步（generator 可能在 Start 之后填充 lanes）此段代码稍有问题
         if (generator != null && lanes != generator.lanes)

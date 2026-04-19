@@ -1,3 +1,4 @@
+using Clipper2Lib;
 using GraphModel;
 using RoadGeneration;
 using System;
@@ -17,11 +18,16 @@ public class RoadNetworkGenerator : MonoBehaviour
     [Header("Minor Roads")]
     public int minorRoadCount = 400;
     public float deletionProbability = 0.2f;
+    
+    [Header("Road Width")]
+    public float roadWidth = 2f;
 
     private Graph graph;
 
     public List<LaneGeometry> lanes;
+    private Paths64 polylines;
     public List<RoadPolygon> roadPolygons;
+    private Paths64 footprint;
 
 
     void Start()
@@ -68,12 +74,23 @@ public class RoadNetworkGenerator : MonoBehaviour
         lanes = LaneGenerator.GenerateLanes(graph);
         Debug.Log("Lane count: " + lanes.Count);
 
+
+        // Footprint
+        var builder = new PolylineBuilder(graph);
+        polylines = builder.Build();
+
         //Generate road footprints
-        roadPolygons = RoadFootprintGenerator.Generate(graph, 1.2f);//改参的入口
+        //roadPolygons = RoadFootprintGenerator.Generate(graph, 2f);//改参的入口
+        footprint = RoadFootprintGenerator.Generate(polylines, roadWidth);
+
     }
 
     internal Graph GetGraph()
     {
         return graph;
     }
+
+    // 对外只读暴露用于调试/可视化
+    public Paths64 Polylines => polylines;
+    public Paths64 FootprintPaths => footprint;
 }
