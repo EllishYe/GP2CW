@@ -21,6 +21,7 @@ public class RoadNetworkGenerator : MonoBehaviour
     private Graph graph;
 
     public List<LaneGeometry> lanes;
+    public List<RoadPolygon> roadPolygons;
 
 
     void Start()
@@ -66,6 +67,9 @@ public class RoadNetworkGenerator : MonoBehaviour
         // Generate Lanes from the graph's edges
         lanes = LaneGenerator.GenerateLanes(graph);
         Debug.Log("Lane count: " + lanes.Count);
+
+        //Generate road footprints
+        roadPolygons = RoadFootprintGenerator.Generate(graph, 1.2f);//改参的入口
     }
 
     internal Graph GetGraph()
