@@ -2,6 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using Clipper2Lib;
 
+/// <summary>
+/// 可视化Polyline和RoadFootprint的组件
+/// </summary>
+
+
 public class RoadFootprintVisualizer : MonoBehaviour
 {
     public RoadNetworkGenerator generator;
