@@ -231,6 +231,9 @@ public class PolylineBuilder
         GraphModel.Node prev = null;
         GraphModel.Edge currentEdge = startEdge;
 
+        
+        Vector2 prevDir = Vector2.zero;
+
         while (currentEdge != null && !visited.Contains(currentEdge))
         {
             visited.Add(currentEdge);
@@ -242,14 +245,23 @@ public class PolylineBuilder
 
             path.Add(ToPoint64(current));
 
+            
+            Vector2 currDir = new Vector2(
+            next.X - current.X,
+            next.Y - current.Y
+            ).normalized;
+            
+
             prev = current;
             current = next;
+            prevDir = currDir;
 
-            // ❗关键：遇到 junction 就停
-            if (current.Edges.Count >= 3)
-                break;
+            //// ❗关键：遇到 junction 就停
+            //if (current.Edges.Count >= 3)
+            //    break;
 
-            currentEdge = GetNextMinorEdge(current, prev);
+            //currentEdge = GetNextMinorEdge(current, prev);
+            currentEdge = GetNextMinorEdgeSmart(current, prev, prevDir);
         }
 
         path.Add(ToPoint64(current));
@@ -273,6 +285,63 @@ public class PolylineBuilder
         }
 
         return null;
+    }
+
+    private GraphModel.Edge GetNextMinorEdgeSmart(
+    GraphModel.Node node,
+    GraphModel.Node from,
+    Vector2 prevDir)
+    {
+        List<GraphModel.Edge> candidates = new List<GraphModel.Edge>();
+
+        foreach (var edge in node.Edges)
+        {
+            if (visited.Contains(edge)) continue;
+
+            if (edge.NodeA == from || edge.NodeB == from)
+                continue;
+
+            if (!IsMinor(edge)) continue;
+
+            candidates.Add(edge);
+        }
+
+        // ❌没有路 → 结束
+        if (candidates.Count == 0)
+            return null;
+
+        // 🔥只有一条 → 直接走（穿过“假junction”）
+        if (candidates.Count == 1)
+            return candidates[0];
+
+        // 🔥多条 → 选“最直”的（角度连续性）
+        GraphModel.Edge bestEdge = null;
+        float bestDot = -1f;
+
+        foreach (var edge in candidates)
+        {
+            GraphModel.Node next =
+                (edge.NodeA == node) ? edge.NodeB : edge.NodeA;
+
+            Vector2 dir = new Vector2(
+                next.X - node.X,
+                next.Y - node.Y
+            ).normalized;
+
+            float dot = Vector2.Dot(prevDir, dir);
+
+            if (dot > bestDot)
+            {
+                bestDot = dot;
+                bestEdge = edge;
+            }
+        }
+
+        // 👉可以加一个“角度阈值”防止乱转（可选）
+        if (bestDot < 0.3f) // ≈ >70度转弯就不继续
+            return null;
+
+        return bestEdge;
     }
 
     #endregion
