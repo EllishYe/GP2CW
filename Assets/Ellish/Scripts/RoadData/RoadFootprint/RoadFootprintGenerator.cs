@@ -1,16 +1,18 @@
-using Clipper2Lib;
+ï»¿using Clipper2Lib;
 using GraphModel;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public static class RoadFootprintGenerator
 {
-    public static List<RoadPolygon> Generate(GraphModel.Graph graph, float roadWidth = 0.6f)//´Ë´¦µÄroadWithĞèÒªºÍLaneGeneratorÖĞµÄlaneOffser±£³ÖÒ»ÖÂ£¨roadWith=laneOffset*2f£©
+    public static List<RoadPolygon> Generate(GraphModel.Graph graph, float roadWidth = 0.6f)
+        //æ­¤å¤„çš„roadWithéœ€è¦å’ŒLaneGeneratorä¸­çš„laneOffserä¿æŒä¸€è‡´ï¼ˆroadWith=laneOffset*2fï¼‰
     {
-        List<PathD> subject = new List<PathD>();
 
-        // ===== ÊÕ¼¯ËùÓĞ Edge =====
+        //List<Paths64> input = new List<Paths64>();
+        Paths64 input = new Paths64();
+
+        // ===== Collect Edges =====
         List<GraphModel.Edge> edges = new List<GraphModel.Edge>();
         edges.AddRange(graph.MajorEdges);
         edges.AddRange(graph.MinorEdges);
@@ -20,35 +22,35 @@ public static class RoadFootprintGenerator
             Vector2 A = new Vector2(edge.NodeA.X, edge.NodeA.Y);
             Vector2 B = new Vector2(edge.NodeB.X, edge.NodeB.Y);
 
-            float length = Vector2.Distance(A, B);
-            if (length < 0.01f) continue;
+            if (Vector2.Distance(A, B) < 0.01f) continue;
 
-            Vector2 dir = (B - A).normalized;
-            Vector2 normal = new Vector2(-dir.y, dir.x);
-
-            float halfWidth = roadWidth * 0.5f;
-
-            // ===== ¹¹Ôì¾ØĞÎ£¨Ë³Ê±Õë£©=====
-            Vector2 p1 = A + normal * halfWidth;
-            Vector2 p2 = B + normal * halfWidth;
-            Vector2 p3 = B - normal * halfWidth;
-            Vector2 p4 = A - normal * halfWidth;
-
-            PathD rect = new PathD
+            Path64 path = new Path64
             {
-                new PointD(p1.x, p1.y),
-                new PointD(p2.x, p2.y),
-                new PointD(p3.x, p3.y),
-                new PointD(p4.x, p4.y)
+            new Point64((long)(A.x * 1000), (long)(A.y * 1000)),
+            new Point64((long)(B.x * 1000), (long)(B.y * 1000))
             };
 
-            subject.Add(rect);
+            input.Add(path);
         }
 
-        // ===== Clipper2 Union =====
-        PathsD solution = Clipper.Union(new PathsD(subject), FillRule.NonZero);
 
-        // ===== ×ª»Ø Unity Êı¾İ =====
+
+        //=====Clipper2 Offset=====
+        ClipperOffset offset = new ClipperOffset();
+
+        offset.AddPaths(
+            input,
+            JoinType.Round,   // JointPoint (for Polylines)
+            EndType.Butt  // EndPoint
+        );
+
+        Paths64 expanded = new Paths64();
+        offset.Execute(roadWidth * 500, expanded);
+
+        // ===== Clipper2 Union =====
+        Paths64 solution = Clipper.Union(expanded, FillRule.NonZero);
+
+        // ===== Result Conversion =====
         List<RoadPolygon> result = new List<RoadPolygon>();
 
         foreach (var path in solution)
@@ -57,7 +59,7 @@ public static class RoadFootprintGenerator
 
             foreach (var p in path)
             {
-                poly.points.Add(new Vector2((float)p.x, (float)p.y));
+                poly.points.Add(new Vector2((float)p.X / 1000f, (float)p.Y / 1000f));
             }
 
             result.Add(poly);
