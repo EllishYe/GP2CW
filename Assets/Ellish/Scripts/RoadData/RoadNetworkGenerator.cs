@@ -37,7 +37,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         Generate();
     }
 
-    void Generate()
+    public void Generate()
     {
         graph = new Graph();
 

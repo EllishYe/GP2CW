@@ -5,11 +5,11 @@ using UnityEngine.AI;
 
 public class PedestrianManager : MonoBehaviour
 {
-    [Header("行人预制体 (可以放多个不同外观的小人)")]
+    [Header("pedestrian prefabs")]
     public List<GameObject> pedestrianPrefabs;
 
-    [Header("生成设置")]
-    public int targetPedestrianCount = 100; // 你想生成的全城总人数
+    [Header("setting")]
+    public int PedestrianCount = 100; // 你想生成的全城总人数
     public float spawnDelay = 1.2f;        // 每隔 0.05 秒生成一个，防止瞬间卡死
 
     // 这个方法留给大总管 TestCityBuilder 在建城完毕后调用
@@ -39,7 +39,7 @@ public class PedestrianManager : MonoBehaviour
 
 
         // 3. 开始依次/循环在家里生成行人
-        for (int i = 0; i < targetPedestrianCount; i++)
+        for (int i = 0; i < PedestrianCount; i++)
         {
             // 依次取家（如果人数多于家，就取模循环）
             Transform spawnPoint = homePoints[i % homePoints.Count];

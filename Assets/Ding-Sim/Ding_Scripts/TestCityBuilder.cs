@@ -21,70 +21,84 @@ public class TestCityBuilder : MonoBehaviour
     public float spawnDelay = 0f;  //每2秒生成一辆车
     public NavMeshSurface navMeshSurface;
 
-    //void Start()
-    //{
-    //    //TrafficGraph myCityGraph = BuildSimpleCrossroad();
-
-    //    // 1. 构建一个正方形的环形路网
-    //    TrafficGraph myCityGraph = BuildSplitRoad();
-
-    //    // 2. 开启协程，每隔几秒生成一辆车
-    //    StartCoroutine(SpawnCars(myCityGraph));
-
-    //}
-
-    //IEnumerator SpawnCars(TrafficGraph graph)
-    //{
-    //    LaneData startLane = graph.allLanes[0];
-    //    for (int i = 0; i < carCount; i++)
-    //    {
-
-    //        GameObject selectedPrefab = GetRandomCarByWeight();
-    //        if (selectedPrefab != null)
-    //        {
-    //            GameObject myCar = Instantiate(selectedPrefab);
-    //            VehicleAgent agent = myCar.GetComponent<VehicleAgent>();
-    //            if (agent != null)
-    //            {
-    //                agent.InitVehicle(graph, startLane);
-    //            }
-    //        }
-
-    //        // 等待 2 秒后再生成下一辆
-    //        yield return new WaitForSeconds(spawnDelay);
-    //    }
-    //}
+    public RoadNetworkGenerator pcgGenerator;
+    public TrafficGraph myTrafficGraph;
 
     void Start()
     {
 
+        if (myTrafficGraph == null)
+            myTrafficGraph = GetComponent<TrafficGraph>();
+
+        StartCoroutine(CityGenerationPipeline());
+        //pcgGenerator.Generate();
+
+        //IntersectionController[] allIntersections = FindObjectsByType<IntersectionController>(FindObjectsSortMode.None);
+        //foreach (var intersection in allIntersections)
+        //{
+        //    intersection.AutoDetectIncomingLanes(); // 给每个路口通电开机！
+        //}
+
+
+        //TrafficGraph myCityGraph = BuildSplitRoad();
+
+        //// 让交通局去缝合地图
+        //myCityGraph.BuildGraphFromScene();
+
+        ////GetComponent<NavMeshSurface>().BuildNavMesh();
+        //if (navMeshSurface != null)
+        //{
+        //    // 这句话会瞬间扫描全城，但只在 Layer 为 Sidewalk 的物体表面生成蓝色的网格！
+        //    navMeshSurface.BuildNavMesh();
+        //    Debug.Log("🌐 寻路网格动态烘焙完毕！");
+        //}
+
+        ////生成车辆
+        //StartCoroutine(SpawnCars(myCityGraph));
+
+        ////生成行人
+        //FindAnyObjectByType<PedestrianManager>().SpawnCityPedestrians();
+
+
+    }
+
+    IEnumerator CityGenerationPipeline()
+    {
+        Debug.Log("🏗️ [阶段 1/5] 开始生成 PCG 骨架...");
+        pcgGenerator.Generate();
+
+        Debug.Log("🏗️ [阶段 2/5] 翻译数据并生成物理车道...");
+        BridgeDataAndSpawnCars(); // 👈 极其关键！把你上一条消息写的那个方法加在这里！
+
+        // 🚨 极其关键的安全锁：强制 Unity 立刻刷新一次物理引擎的空间划分树！
+        // 这样接下来的路口探测才能 100% 摸到刚生成的车道。
+        Physics.SyncTransforms();
+        // 或者如果你求稳，也可以让代码停顿一帧： yield return new WaitForFixedUpdate();
+
+        Debug.Log("🏗️ [阶段 3/5] 交通局开始打通并接管全城路网...");
+        // myCityGraph = BuildSplitRoad(); // (如果你用 PCG 了，这句旧代码可能就不需要了)
+        myTrafficGraph.BuildGraphFromScene(); // 让交通局收集所有路段
+
+        Debug.Log("🏗️ [阶段 4/5] 激活十字路口交警...");
         IntersectionController[] allIntersections = FindObjectsByType<IntersectionController>(FindObjectsSortMode.None);
         foreach (var intersection in allIntersections)
         {
-            intersection.AutoDetectIncomingLanes(); // 给每个路口通电开机！
+            intersection.AutoDetectIncomingLanes();
         }
 
-
-        TrafficGraph myCityGraph = BuildSplitRoad();
-
-        // 让交通局去缝合地图
-        myCityGraph.BuildGraphFromScene();
-
-        //GetComponent<NavMeshSurface>().BuildNavMesh();
+        Debug.Log("🏗️ [阶段 5/5] 烘焙行人 NavMesh...");
         if (navMeshSurface != null)
         {
-            // 这句话会瞬间扫描全城，但只在 Layer 为 Sidewalk 的物体表面生成蓝色的网格！
+            // ⚠️ 前提：你要确保队友的 PCG 在阶段 1 已经把人行道的 Mesh 生成出来了！
             navMeshSurface.BuildNavMesh();
-            Debug.Log("🌐 寻路网格动态烘焙完毕！");
         }
 
-        //生成车辆
-        StartCoroutine(SpawnCars(myCityGraph));
+        // 稍微等 0.1 秒，确保场景彻底稳定，再开始投放移动实体（避免卡顿掉地底下）
+        yield return new WaitForSeconds(0.1f);
 
-        //生成行人
+        Debug.Log("🚀 [最终阶段] 投放车辆与行人！");
+        StartCoroutine(SpawnCars(myTrafficGraph));
         FindAnyObjectByType<PedestrianManager>().SpawnCityPedestrians();
-
-
     }
 
     // ⚠️ 注意：这里多加了一个参数 startLane
@@ -191,6 +205,59 @@ public class TestCityBuilder : MonoBehaviour
     }
 
 
+    public void BridgeDataAndSpawnCars()
+    {
+        // 确保数据已经生成
+        if (pcgGenerator.lanes == null || pcgGenerator.lanes.Count == 0)
+        {
+            Debug.LogError("车道数据为空！");
+            return;
+        }
+
+        Transform lanesRoot = new GameObject("AI_Lanes_Root").transform;
+        List<LaneData> myAILanes = new List<LaneData>();
+
+        // 🎯 核心读取环节
+        foreach (var pcgLane in pcgGenerator.lanes)
+        {
+            // 1. 创建 AI 车道实体
+            GameObject laneObj = new GameObject("AutoLane");
+            laneObj.transform.SetParent(lanesRoot);
+            LaneData myLane = laneObj.AddComponent<LaneData>();
+
+            Transform p1 = new GameObject("P_Start").transform;
+            Transform p2 = new GameObject("P_End").transform;
+            p1.SetParent(laneObj.transform);
+            p2.SetParent(laneObj.transform);
+
+            // ==========================================
+            // 🚨 看这里！根据你的截图，直接精准读取 Start 和 End
+            Vector2 rawStart = pcgLane.start;
+            Vector2 rawEnd = pcgLane.end;
+
+            // 强制平躺转换：把队友二维的 Y 轴数据，塞进 Unity 三维的 Z 轴里
+            Vector3 unityStart = new Vector3(rawStart.x, 0f, rawStart.y);
+            Vector3 unityEnd = new Vector3(rawEnd.x, 0f, rawEnd.y);
+            // ==========================================
+
+            p1.position = unityStart;
+            p2.position = unityEnd;
+
+            myLane.pathPoints.Add(p1);
+            myLane.pathPoints.Add(p2);
+
+            myAILanes.Add(myLane);
+        }
+
+        // 这里接着写你的拓扑连线逻辑 (双重 foreach 检查距离那个)
+        ConnectLanes(myAILanes);
+
+        // 把翻译好的、铺在地面上的 514 条路，交给你之前写的交通管理器去刷车！
+        // myTrafficGraph.allLanes = myAILanes;
+
+        Debug.Log($"成功读取了 {pcgGenerator.lanes.Count} 条 PCG 车道，并已全部展平到 3D 地面！");
+    }
+
 
     public TrafficGraph BuildSplitRoad()
     {
@@ -240,62 +307,6 @@ public class TestCityBuilder : MonoBehaviour
 
 
 
-
-    //public TrafficGraph BuildSquareLoop()
-    //{
-    //    TrafficGraph graph = new TrafficGraph();
-
-    //    // --- 第 1 条路：底部边 (向右开) ---
-    //    LaneData lane0 = new LaneData();
-    //    lane0.laneId = 0;
-    //    lane0.pathPoints = new List<Vector3> {
-    //        new Vector3(-20, 0.5f, -20),
-    //        new Vector3(0, 0.5f, -20),
-    //        new Vector3(20, 0.5f, -20)
-    //    };
-    //    lane0.nextLaneIds = new List<int> { 1 }; // 开完去 1 号路
-
-    //    // --- 第 2 条路：右侧边 (向上开) ---
-    //    LaneData lane1 = new LaneData();
-    //    lane1.laneId = 1;
-    //    lane1.pathPoints = new List<Vector3> {
-    //        new Vector3(20, 0.5f, -20),
-    //        new Vector3(20, 0.5f, 0),
-    //        new Vector3(20, 0.5f, 20)
-    //    };
-    //    lane1.nextLaneIds = new List<int> { 2 }; // 开完去 2 号路
-
-    //    // --- 第 3 条路：顶部边 (向左开) ---
-    //    LaneData lane2 = new LaneData();
-    //    lane2.laneId = 2;
-    //    lane2.pathPoints = new List<Vector3> {
-    //        new Vector3(20, 0.5f, 20),
-    //        new Vector3(0, 0.5f, 20),
-    //        new Vector3(-20, 0.5f, 20)
-    //    };
-    //    lane2.nextLaneIds = new List<int> { 3 }; // 开完去 3 号路
-
-    //    // --- 第 4 条路：左侧边 (向下开，回到起点) ---
-    //    LaneData lane3 = new LaneData();
-    //    lane3.laneId = 3;
-    //    lane3.pathPoints = new List<Vector3> {
-    //        new Vector3(-20, 0.5f, 20),
-    //        new Vector3(-20, 0.5f, 0),
-    //        new Vector3(-20, 0.5f, -20)
-    //    };
-    //    lane3.nextLaneIds = new List<int> { 0 }; // 开完回到 0 号路！形成死循环！
-
-    //    // 把这 4 条路都加入地图
-    //    graph.lanes.Add(lane0.laneId, lane0);
-    //    graph.lanes.Add(lane1.laneId, lane1);
-    //    graph.lanes.Add(lane2.laneId, lane2);
-    //    graph.lanes.Add(lane3.laneId, lane3);
-
-    //    return graph;
-    //}
-
-
-
     ////最简单 弃用
     //public TrafficGraph BuildSimpleCrossroad()
     //{
@@ -315,6 +326,38 @@ public class TestCityBuilder : MonoBehaviour
     //    graph.lanes.Add(lane0.laneId, lane0);
     //    return graph;
     //}
+
+    
+
+
+    // 拓扑连线核心逻辑：把散落的线段缝合成交通网
+    private void ConnectLanes(List<LaneData> lanes)
+    {
+        float connectionThreshold = 0.5f; // 距离小于 0.5 米就认为在同一个路口
+
+        foreach (LaneData laneA in lanes)
+        {
+            // 拿到当前路段的最后一个点（出口）
+            Vector3 aEnd = laneA.pathPoints[laneA.pathPoints.Count - 1].position;
+
+            foreach (LaneData laneB in lanes)
+            {
+                if (laneA == laneB) continue; // 不和自己连
+
+                // 拿到另一条路段的第一个点（入口）
+                Vector3 bStart = laneB.pathPoints[0].position;
+
+                // 拿卷尺量一下，如果 A 的出口碰到了 B 的入口，连起来！
+                if (Vector3.Distance(aEnd, bStart) < connectionThreshold)
+                {
+                    // 确保列表已初始化
+                    if (laneA.nextLanes == null) laneA.nextLanes = new List<LaneData>();
+
+                    laneA.nextLanes.Add(laneB);
+                }
+            }
+        }
+    }
 
     // 这是一个辅助生成路点的工具，它会凭空造出一个空物体，并把它放在指定的坐标上
     private Transform CreateNode(Vector3 pos, Transform parentLane)
