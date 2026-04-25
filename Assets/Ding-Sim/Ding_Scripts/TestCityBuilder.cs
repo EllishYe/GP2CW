@@ -90,42 +90,74 @@ public class TestCityBuilder : MonoBehaviour
     // ⚠️ 注意：这里多加了一个参数 startLane
     IEnumerator SpawnCars(TrafficGraph graph)
     {
-        // 防呆检查：确保地图缝合成功，确实有路可走
-        if (graph.allLanes == null || graph.allLanes.Count == 0)
-        {
-            Debug.LogError("🚨 致命错误：城市里一条路都没有！");
-            yield break; // 结束协程
-        }
+        if (graph.allLanes == null || graph.allLanes.Count == 0) yield break;
+
+        int actualSpawnedCount = 0;
+        int maxAttempts = carCount * 10;
+        int currentAttempts = 0;
+
+        // 🚨 终极防重叠武器：建立一个“已停车位”黑名单！
+        List<Vector3> spawnedPositions = new List<Vector3>();
+
+        // 两辆车之间的绝对安全距离（假设车长4米，你想要它们隔开一点，就设为 5f 或 6f）
+        float safeDistance = 6.0f;
 
         for (int i = 0; i < carCount; i++)
         {
-            // 防呆设计：检查车库
-            if (carSpawnPool == null || carSpawnPool.Count == 0)
+            currentAttempts++;
+            if (currentAttempts > maxAttempts)
             {
-                Debug.LogError("🚨 车库是空的！请去 Inspector 面板里把汽车 Prefab 填进去！");
+                Debug.LogWarning($"⚠️ 城市已塞满！目标 {carCount} 辆，实际成功 {actualSpawnedCount} 辆。");
                 break;
             }
 
-            // ---------------- 🚨 核心改动 3：每造一辆车，现场抽签决定出生点 ----------------
-            int randomIndex = Random.Range(0, graph.allLanes.Count);
-            LaneData currentRandomLane = graph.allLanes[randomIndex];
-            // -----------------------------------------------------------------------------
+            LaneData chosenLane = graph.allLanes[Random.Range(0, graph.allLanes.Count)];
+            Vector3 startPos = chosenLane.pathPoints[0].position;
+            Vector3 endPos = chosenLane.pathPoints[chosenLane.pathPoints.Count - 1].position;
 
-            GameObject selectedPrefab = GetRandomCarByWeight();
-            if (selectedPrefab != null)
+            float randomT = Random.Range(0.1f, 0.9f);
+            Vector3 spawnPos = Vector3.Lerp(startPos, endPos, randomT) + Vector3.up * 0.5f;
+
+            // 🛡️ 纯数学探测：拿尺子量距离，不依赖物理引擎！
+            bool isSpaceClear = true;
+            foreach (Vector3 existingPos in spawnedPositions)
             {
-                GameObject myCar = Instantiate(selectedPrefab);
-                VehicleAgent agent = myCar.GetComponent<VehicleAgent>();
-                if (agent != null)
+                // 如果这个候选点，距离任何一辆已经生成的车小于安全距离
+                if (Vector3.Distance(spawnPos, existingPos) < safeDistance)
                 {
-                    // 把现场刚抽到的随机路，喂给这辆新造出来的车！
-                    agent.InitVehicle(graph, currentRandomLane);
+                    isSpaceClear = false;
+                    break; // 太挤了，放弃这个点！
                 }
             }
 
-            // 等待设定好的时间，再去造下一辆车
-            yield return new WaitForSeconds(spawnDelay);
+            if (isSpaceClear)
+            {
+                GameObject selectedPrefab = GetRandomCarByWeight();
+                if (selectedPrefab != null)
+                {
+                    GameObject myCar = Instantiate(selectedPrefab, spawnPos, Quaternion.identity);
+                    VehicleAgent agent = myCar.GetComponent<VehicleAgent>();
+
+                    myCar.transform.LookAt(endPos);
+                    if (agent != null) agent.InitVehicle(graph, chosenLane);
+
+                    // 🚨 核心步骤：把这个安全坐标加入黑名单！
+                    // 这样下一辆车绝对不可能再刷在这个点附近
+                    spawnedPositions.Add(spawnPos);
+                    actualSpawnedCount++;
+                }
+
+                // 因为不用等物理引擎刷新了，你可以把等待时间调得极短，甚至设为 0
+                yield return new WaitForSeconds(0.01f);
+            }
+            else
+            {
+                // 距离太近，退回抽签
+                i--;
+            }
         }
+
+        Debug.Log($"🚗 纯数学防重叠部署完毕，成功塞下 {actualSpawnedCount} 辆车！");
     }
 
     // 4. 核心算法：权重随机挑选
