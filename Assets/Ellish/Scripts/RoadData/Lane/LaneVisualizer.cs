@@ -20,10 +20,19 @@ public class LaneVisualizer : MonoBehaviour
     [Range(0.01f, 2f)]
     public float endpointSize = 0.2f;
 
+    [Header("Vehicle Control Point Gizmo")]
+    public bool showVehicleControlPoints = true;
+    public Color vehicleStartPointColor = Color.cyan;
+    public Color vehicleStopPointColor = Color.magenta;
+    public Color vehicleControlLineColor = Color.blue;
+    [Range(0.01f, 2f)]
+    public float vehicleControlPointSize = 0.28f;
+
     void OnValidate()
     {
         gizmoHeight = Mathf.Max(0f, gizmoHeight);
         endpointSize = Mathf.Max(0.01f, endpointSize);
+        vehicleControlPointSize = Mathf.Max(0.01f, vehicleControlPointSize);
     }
 
     void Update()
@@ -101,6 +110,27 @@ public class LaneVisualizer : MonoBehaviour
                 Gizmos.color = endPointColor;
                 Gizmos.DrawSphere(end, endpointSize);
             }
+
+            if (showVehicleControlPoints && generator != null && generator.agentLanes != null && i < generator.agentLanes.Count)
+            {
+                AgentLaneData agentLane = generator.agentLanes[i];
+                Vector3 vehicleStart = WithGizmoHeight(agentLane.vehicleStartPoint);
+                Vector3 vehicleStop = WithGizmoHeight(agentLane.vehicleStopPoint);
+
+                Gizmos.color = vehicleControlLineColor;
+                Gizmos.DrawLine(vehicleStart, vehicleStop);
+
+                Gizmos.color = vehicleStartPointColor;
+                Gizmos.DrawSphere(vehicleStart, vehicleControlPointSize);
+
+                Gizmos.color = vehicleStopPointColor;
+                Gizmos.DrawSphere(vehicleStop, vehicleControlPointSize);
+            }
         }
+    }
+
+    private Vector3 WithGizmoHeight(Vector3 point)
+    {
+        return new Vector3(point.x, gizmoHeight, point.z);
     }
 }

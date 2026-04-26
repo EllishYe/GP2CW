@@ -41,12 +41,16 @@ public class AgentLaneData
     public int id;
     public Vector3 startPoint;
     public Vector3 endPoint;
+    public Vector3 vehicleStartPoint;
+    public Vector3 vehicleStopPoint;
     public int oppositeLaneId;
 
     public RoadKind roadKind;
     public int laneIndexFromCenter;
     public Vector2 planarStart;
     public Vector2 planarEnd;
+    public Vector2 planarVehicleStart;
+    public Vector2 planarVehicleStop;
 
     public AgentLaneData(int id, LaneGeometry lane, int oppositeLaneId, float height = 0f)
     {
@@ -58,6 +62,15 @@ public class AgentLaneData
         laneIndexFromCenter = lane.laneIndexFromCenter;
         startPoint = RoadCoordinateUtility.PlanarToWorld(planarStart, height);
         endPoint = RoadCoordinateUtility.PlanarToWorld(planarEnd, height);
+        SetVehicleControlPoints(planarStart, planarEnd, height);
+    }
+
+    public void SetVehicleControlPoints(Vector2 vehicleStart, Vector2 vehicleStop, float height = 0f)
+    {
+        planarVehicleStart = vehicleStart;
+        planarVehicleStop = vehicleStop;
+        vehicleStartPoint = RoadCoordinateUtility.PlanarToWorld(planarVehicleStart, height);
+        vehicleStopPoint = RoadCoordinateUtility.PlanarToWorld(planarVehicleStop, height);
     }
 }
 

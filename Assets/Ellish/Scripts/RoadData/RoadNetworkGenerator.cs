@@ -231,4 +231,5 @@ public class RoadNetworkGenerator : MonoBehaviour
     public Paths64 MajorPolylines => majorPolylines;
     public Paths64 MinorPolylines => minorPolylines;
     public Paths64 FootprintPaths => footprint;
+    public Graph Graph => graph;
 }

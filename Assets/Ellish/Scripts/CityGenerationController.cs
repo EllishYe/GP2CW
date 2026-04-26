@@ -5,6 +5,7 @@ public class CityGenerationController : MonoBehaviour
     [Header("Stage Generators")]
     public RoadNetworkGenerator roadNetworkGenerator;
     public WalkableAreaGenerator walkableAreaGenerator;
+    public CrosswalkGenerator crosswalkGenerator;
 
     [Header("Runtime")]
     public bool generateRoadsOnStart = false;
@@ -45,6 +46,8 @@ public class CityGenerationController : MonoBehaviour
             roadNetworkGenerator = GetComponentInChildren<RoadNetworkGenerator>();
         if (walkableAreaGenerator == null)
             walkableAreaGenerator = GetComponentInChildren<WalkableAreaGenerator>();
+        if (crosswalkGenerator == null)
+            crosswalkGenerator = GetComponentInChildren<CrosswalkGenerator>();
     }
 
     public void EnsureGeneratedHierarchy()
@@ -82,11 +85,12 @@ public class CityGenerationController : MonoBehaviour
         FindStageGenerators();
 
         if (walkableAreaGenerator == null)
-        {
             walkableAreaGenerator = gameObject.AddComponent<WalkableAreaGenerator>();
-        }
+        if (crosswalkGenerator == null)
+            crosswalkGenerator = gameObject.AddComponent<CrosswalkGenerator>();
 
         walkableAreaGenerator.Generate(roadNetworkGenerator, walkableRoot);
+        crosswalkGenerator.Generate(roadNetworkGenerator, walkableRoot);
     }
 
     public void ClearWalkable()
@@ -94,6 +98,8 @@ public class CityGenerationController : MonoBehaviour
         EnsureGeneratedHierarchy();
         if (walkableAreaGenerator != null)
             walkableAreaGenerator.Clear(walkableRoot);
+        if (crosswalkGenerator != null)
+            crosswalkGenerator.Clear(walkableRoot);
     }
 
     public void GenerateBlocks()
