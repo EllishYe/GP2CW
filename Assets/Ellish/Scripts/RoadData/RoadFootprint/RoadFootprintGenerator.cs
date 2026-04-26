@@ -14,6 +14,9 @@ public static class RoadFootprintGenerator
 
     public static Paths64 Generate(Paths64 input, float roadWidth)
     {
+        if (input == null || input.Count == 0)
+            return new Paths64();
+
         ClipperOffset offset = new ClipperOffset();
 
         offset.AddPaths(
@@ -29,6 +32,24 @@ public static class RoadFootprintGenerator
 
 
         return solution;
+    }
+    public static Paths64 GenerateByRoadType(Paths64 majorInput, float majorRoadWidth, Paths64 minorInput, float minorRoadWidth)
+    {
+        Paths64 combined = new Paths64();
+        AddPaths(combined, Generate(majorInput, majorRoadWidth));
+        AddPaths(combined, Generate(minorInput, minorRoadWidth));
+
+        if (combined.Count == 0)
+            return combined;
+
+        return Clipper.Union(combined, FillRule.NonZero);
+    }
+
+    private static void AddPaths(Paths64 target, Paths64 source)
+    {
+        if (source == null) return;
+        foreach (Path64 path in source)
+            target.Add(path);
     }
 }
 

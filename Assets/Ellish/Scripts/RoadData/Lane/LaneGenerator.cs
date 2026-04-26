@@ -3,58 +3,68 @@ using UnityEngine;
 using GraphModel;
 
 /// <summary>
-/// Generate Lane Geometries from the graph's edges'
-/// Each edge will generate two lanes(one for each direction)
+/// Generate lane geometries from graph edges. Each road can have multiple lanes per direction.
 /// </summary>
-
 public static class LaneGenerator
 {
     public static List<LaneGeometry> GenerateLanes(
         Graph graph,
-        float cutDistance = 8f,// Junction Radius + safety margin
-        float laneOffset = 1.75f,// Lane width/2
+        float cutDistance = 8f,
+        float laneWidth = 3.5f,
+        int majorLanesPerDirection = 2,
+        int minorLanesPerDirection = 1,
         bool skipShortEdges = true
         )
     {
         List<LaneGeometry> lanes = new List<LaneGeometry>();
+        if (graph == null) return lanes;
 
-        // Handle both major and minor egdes together
-        List<Edge> allEdges = new List<Edge>();
-        allEdges.AddRange(graph.MajorEdges);
-        allEdges.AddRange(graph.MinorEdges);
-
-        foreach (var edge in allEdges)
-        {
-            Vector2 A = new Vector2(edge.NodeA.X, edge.NodeA.Y);
-            Vector2 B = new Vector2(edge.NodeB.X, edge.NodeB.Y);
-
-            Vector2 dir = (B - A).normalized;
-            Vector2 normal = new Vector2(-dir.y, dir.x);
-
-            float length = Vector2.Distance(A, B);
-
-            // Jump short edges, as they may not have enough space for lanes after cutting.
-            if (skipShortEdges && length < cutDistance * 2f)
-                continue;
-
-            // ===== cut =====
-            Vector2 start = A + dir * cutDistance;
-            Vector2 end = B - dir * cutDistance;
-
-            // ===== Left Lane£¨A ¡ú B£©=====
-            Vector2 leftStart = start + normal * laneOffset;
-            Vector2 leftEnd = end + normal * laneOffset;
-
-            lanes.Add(new LaneGeometry(leftStart, leftEnd));
-
-            // ===== Right Lane£¨B ¡ú A£©=====
-            Vector2 rightStart = end - normal * laneOffset;
-            Vector2 rightEnd = start - normal * laneOffset;
-
-            lanes.Add(new LaneGeometry(rightStart, rightEnd));
-        }
-
+        AddLanesForEdges(lanes, graph.MajorEdges, RoadKind.Major, majorLanesPerDirection, laneWidth, cutDistance, skipShortEdges);
+        AddLanesForEdges(lanes, graph.MinorEdges, RoadKind.Minor, minorLanesPerDirection, laneWidth, cutDistance, skipShortEdges);
         return lanes;
     }
 
+    private static void AddLanesForEdges(
+        List<LaneGeometry> lanes,
+        List<Edge> edges,
+        RoadKind roadKind,
+        int lanesPerDirection,
+        float laneWidth,
+        float cutDistance,
+        bool skipShortEdges)
+    {
+        if (edges == null) return;
+
+        lanesPerDirection = Mathf.Max(1, lanesPerDirection);
+        laneWidth = Mathf.Max(0.1f, laneWidth);
+        cutDistance = Mathf.Max(0f, cutDistance);
+
+        foreach (var edge in edges)
+        {
+            Vector2 a = new Vector2(edge.NodeA.X, edge.NodeA.Y);
+            Vector2 b = new Vector2(edge.NodeB.X, edge.NodeB.Y);
+            Vector2 dir = (b - a).normalized;
+            Vector2 normal = new Vector2(-dir.y, dir.x);
+            float length = Vector2.Distance(a, b);
+
+            if (skipShortEdges && length < cutDistance * 2f)
+                continue;
+
+            Vector2 start = a + dir * cutDistance;
+            Vector2 end = b - dir * cutDistance;
+
+            for (int laneIndex = 0; laneIndex < lanesPerDirection; laneIndex++)
+            {
+                float offset = laneWidth * (laneIndex + 0.5f);
+
+                Vector2 forwardStart = start + normal * offset;
+                Vector2 forwardEnd = end + normal * offset;
+                lanes.Add(new LaneGeometry(forwardStart, forwardEnd, roadKind, laneIndex));
+
+                Vector2 backwardStart = end - normal * offset;
+                Vector2 backwardEnd = start - normal * offset;
+                lanes.Add(new LaneGeometry(backwardStart, backwardEnd, roadKind, laneIndex));
+            }
+        }
+    }
 }

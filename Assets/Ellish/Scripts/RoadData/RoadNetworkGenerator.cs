@@ -14,6 +14,7 @@ public class RoadNetworkGenerator : MonoBehaviour
 
     [Header("Map Settings")]
     public int mapSize = 1000;
+    public int randomSeed = 12345;
     public float roadSegmentLength = 100f;
 
     [Header("Major Roads")]
@@ -27,10 +28,14 @@ public class RoadNetworkGenerator : MonoBehaviour
     
     [Header("Road Dimensions")]
     public float laneWidth = 3.5f;
+    public int majorLanesPerDirection = 2;
+    public int minorLanesPerDirection = 1;
     public float junctionCutDistance = 8f;
     public bool deriveRoadWidthFromLaneWidth = true;
-    public float roadWidth = 7f;
+    public float majorRoadWidth = 14f;
+    public float minorRoadWidth = 7f;
     public bool skipLanesTooShortForJunctionCut = true;
+    [HideInInspector] public float roadWidth = 14f;
 
     [Header("Agent Interface")]
     public float agentLaneHeight = 0f;
@@ -47,6 +52,8 @@ public class RoadNetworkGenerator : MonoBehaviour
     public List<LaneGeometry> lanes;
     public List<AgentLaneData> agentLanes;
     private Paths64 polylines;
+    private Paths64 majorPolylines;
+    private Paths64 minorPolylines;
     public List<RoadPolygon> roadPolygons;
     private Paths64 footprint;
 
@@ -62,11 +69,17 @@ public class RoadNetworkGenerator : MonoBehaviour
         mapSize = Mathf.Max(1, mapSize);
         roadSegmentLength = Mathf.Max(1f, roadSegmentLength);
         laneWidth = Mathf.Max(0.1f, laneWidth);
+        majorLanesPerDirection = Mathf.Max(1, majorLanesPerDirection);
+        minorLanesPerDirection = Mathf.Max(1, minorLanesPerDirection);
         junctionCutDistance = Mathf.Max(0f, junctionCutDistance);
         if (deriveRoadWidthFromLaneWidth)
-            roadWidth = laneWidth * 2f;
+            ApplyDerivedRoadWidths();
         else
-            roadWidth = Mathf.Max(0.1f, roadWidth);
+        {
+            majorRoadWidth = Mathf.Max(0.1f, majorRoadWidth);
+            minorRoadWidth = Mathf.Max(0.1f, minorRoadWidth);
+            roadWidth = Mathf.Max(majorRoadWidth, minorRoadWidth);
+        }
         agentLaneHeight = Mathf.Max(0f, agentLaneHeight);
         roadMeshHeight = Mathf.Max(0f, roadMeshHeight);
     }
@@ -76,7 +89,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         ClearGeneratedObjects();
         graph = new Graph();
 
-        System.Random rand = new System.Random(12345); // 固定种子（方便调试）
+        System.Random rand = new System.Random(randomSeed); // 固定种子（方便调试）
 
         // Generate major roads 
         MajorGenerator majorGen = new MajorGenerator(
@@ -111,9 +124,9 @@ public class RoadNetworkGenerator : MonoBehaviour
 
         // Generate Lanes from the graph's edges
         if (deriveRoadWidthFromLaneWidth)
-            roadWidth = laneWidth * 2f;
+            ApplyDerivedRoadWidths();
 
-        lanes = LaneGenerator.GenerateLanes(graph, junctionCutDistance, laneWidth * 0.5f, skipLanesTooShortForJunctionCut);
+        lanes = LaneGenerator.GenerateLanes(graph, junctionCutDistance, laneWidth, majorLanesPerDirection, minorLanesPerDirection, skipLanesTooShortForJunctionCut);
         agentLanes = AgentLaneExporter.Export(lanes, agentLaneHeight);
         Debug.Log("Lane count: " + lanes.Count);
         Debug.Log("Agent lane count: " + agentLanes.Count);
@@ -121,12 +134,13 @@ public class RoadNetworkGenerator : MonoBehaviour
 
         // Footprint
         var builder = new PolylineBuilder(graph);
-        polylines = builder.Build();
+        majorPolylines = builder.BuildMajor();
+        minorPolylines = builder.BuildMinor();
+        polylines = CombinePolylines(majorPolylines, minorPolylines);
 
         //Generate road footprints
-        //roadPolygons = RoadFootprintGenerator.Generate(graph, 2f);//改参的入口
-        footprint = RoadFootprintGenerator.Generate(polylines, roadWidth);
-
+        //roadPolygons = RoadFootprintGenerator.Generate(graph, 2f);//??ε????
+        footprint = RoadFootprintGenerator.GenerateByRoadType(majorPolylines, majorRoadWidth, minorPolylines, minorRoadWidth);
         if (generateRoadMesh)
             BuildRoadMeshObject();
 
@@ -138,6 +152,8 @@ public class RoadNetworkGenerator : MonoBehaviour
         lanes = null;
         agentLanes = null;
         polylines = null;
+        majorPolylines = null;
+        minorPolylines = null;
         roadPolygons = null;
         footprint = null;
 
@@ -179,6 +195,27 @@ public class RoadNetworkGenerator : MonoBehaviour
             meshRenderer.sharedMaterial = roadMaterial;
     }
 
+    private void ApplyDerivedRoadWidths()
+    {
+        majorRoadWidth = laneWidth * majorLanesPerDirection * 2f;
+        minorRoadWidth = laneWidth * minorLanesPerDirection * 2f;
+        roadWidth = Mathf.Max(majorRoadWidth, minorRoadWidth);
+    }
+
+    private Paths64 CombinePolylines(Paths64 first, Paths64 second)
+    {
+        Paths64 combined = new Paths64();
+        AddPaths(combined, first);
+        AddPaths(combined, second);
+        return combined;
+    }
+
+    private void AddPaths(Paths64 target, Paths64 source)
+    {
+        if (source == null) return;
+        foreach (Path64 path in source)
+            target.Add(path);
+    }
     internal Graph GetGraph()
     {
         return graph;
@@ -191,5 +228,7 @@ public class RoadNetworkGenerator : MonoBehaviour
 
     // 对外只读暴露用于调试/可视化
     public Paths64 Polylines => polylines;
+    public Paths64 MajorPolylines => majorPolylines;
+    public Paths64 MinorPolylines => minorPolylines;
     public Paths64 FootprintPaths => footprint;
 }

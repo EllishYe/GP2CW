@@ -7,6 +7,9 @@ public class LaneVisualizer : MonoBehaviour
 
     public List<LaneGeometry> lanes;
 
+    [Header("Gizmo Placement")]
+    public float gizmoHeight = 0.05f;
+
     public Color colorForward = Color.yellow;
     public Color colorBackward = Color.yellow;
 
@@ -19,21 +22,27 @@ public class LaneVisualizer : MonoBehaviour
 
     void OnValidate()
     {
+        gizmoHeight = Mathf.Max(0f, gizmoHeight);
         endpointSize = Mathf.Max(0.01f, endpointSize);
     }
 
     void Update()
     {
-        // 在运行时保证实时同步（generator 可能在 Start 之后填充 lanes）此段代码稍有问题
+        SyncLanesFromGenerator(true);
+    }
+
+    private void SyncLanesFromGenerator(bool logWhenChanged)
+    {
         if (generator != null && lanes != generator.lanes)
         {
             lanes = generator.lanes;
-            Debug.Log($"LaneVisualizer: synchronized lanes from generator. lanes.Count = {lanes?.Count ?? 0}");
+            if (logWhenChanged)
+                Debug.Log($"LaneVisualizer: synchronized lanes from generator. lanes.Count = {lanes?.Count ?? 0}");
         }
     }
-
     void OnDrawGizmos()
     {
+        SyncLanesFromGenerator(false);
         //if (lanes == null) return;
 
         //foreach (var lane in lanes)
@@ -65,8 +74,8 @@ public class LaneVisualizer : MonoBehaviour
         for (int i = 0; i < lanes.Count; i++)
         {
             var lane = lanes[i];
-            Vector3 start = RoadCoordinateUtility.PlanarToWorld(lane.start);
-            Vector3 end = RoadCoordinateUtility.PlanarToWorld(lane.end);
+            Vector3 start = RoadCoordinateUtility.PlanarToWorld(lane.start, gizmoHeight);
+            Vector3 end = RoadCoordinateUtility.PlanarToWorld(lane.end, gizmoHeight);
 
             // 画线（固定白色）
             Gizmos.color = Color.white;

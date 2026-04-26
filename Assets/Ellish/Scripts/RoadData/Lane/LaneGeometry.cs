@@ -1,6 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+public enum RoadKind
+{
+    Major,
+    Minor
+}
+
 /// <summary>
 /// LaneGeometry contains geometric info for a lane,such as its start and end positions.
 /// </summary>
@@ -10,11 +16,19 @@ public class LaneGeometry
 {
     public Vector2 start;
     public Vector2 end;
+    public RoadKind roadKind;
+    public int laneIndexFromCenter;
 
-    public LaneGeometry(Vector2 s, Vector2 e)
+    public LaneGeometry(Vector2 s, Vector2 e) : this(s, e, RoadKind.Minor, 0)
+    {
+    }
+
+    public LaneGeometry(Vector2 s, Vector2 e, RoadKind kind, int laneIndex)
     {
         start = s;
         end = e;
+        roadKind = kind;
+        laneIndexFromCenter = laneIndex;
     }
 }
 
@@ -29,15 +43,19 @@ public class AgentLaneData
     public Vector3 endPoint;
     public int oppositeLaneId;
 
+    public RoadKind roadKind;
+    public int laneIndexFromCenter;
     public Vector2 planarStart;
     public Vector2 planarEnd;
 
-    public AgentLaneData(int id, Vector2 planarStart, Vector2 planarEnd, int oppositeLaneId, float height = 0f)
+    public AgentLaneData(int id, LaneGeometry lane, int oppositeLaneId, float height = 0f)
     {
         this.id = id;
-        this.planarStart = planarStart;
-        this.planarEnd = planarEnd;
+        planarStart = lane.start;
+        planarEnd = lane.end;
         this.oppositeLaneId = oppositeLaneId;
+        roadKind = lane.roadKind;
+        laneIndexFromCenter = lane.laneIndexFromCenter;
         startPoint = RoadCoordinateUtility.PlanarToWorld(planarStart, height);
         endPoint = RoadCoordinateUtility.PlanarToWorld(planarEnd, height);
     }
@@ -54,7 +72,7 @@ public static class AgentLaneExporter
         {
             LaneGeometry lane = sourceLanes[i];
             int oppositeLaneId = GetOppositeLaneId(i, sourceLanes.Count);
-            exported.Add(new AgentLaneData(i, lane.start, lane.end, oppositeLaneId, height));
+            exported.Add(new AgentLaneData(i, lane, oppositeLaneId, height));
         }
 
         return exported;
