@@ -9,10 +9,10 @@ public class PedestrianManager : MonoBehaviour
     public List<GameObject> pedestrianPrefabs;
 
     [Header("setting")]
-    public int PedestrianCount = 100; // 你想生成的全城总人数
-    public float spawnDelay = 1.2f;        // 每隔 0.05 秒生成一个，防止瞬间卡死
+    public int PedestrianCount = 100; 
+    public float spawnDelay = 1.2f;   
 
-    // 这个方法留给大总管 TestCityBuilder 在建城完毕后调用
+    // call this in TestCityBuilder
     public void SpawnCityPedestrians()
     {
         StartCoroutine(SpawnRoutine());
@@ -20,11 +20,12 @@ public class PedestrianManager : MonoBehaviour
 
     private IEnumerator SpawnRoutine()
     {
-        // 1. 找到全城所有的 POI 脚本
+        Transform PedestrianRoot = new GameObject("Pedestrian_Root").transform;
+        // 1. find all POI in city
         PedestrianPOI[] allPOIScripts = Object.FindObjectsByType<PedestrianPOI>(FindObjectsSortMode.None);
         List<Transform> homePoints = new List<Transform>();
 
-        // 2. 筛选出所有类型为 Home 的点
+        // 2. find all home POI
         foreach (var poi in allPOIScripts)
         {
             if (poi.type == PedestrianPOI.POIType.Home)
@@ -52,7 +53,8 @@ public class PedestrianManager : MonoBehaviour
             if (NavMesh.SamplePosition(spawnPos, out hit, 2.0f, NavMesh.AllAreas))
             {
                 GameObject selectedPrefab = pedestrianPrefabs[Random.Range(0, pedestrianPrefabs.Count)];
-                Instantiate(selectedPrefab, hit.position, Quaternion.identity);
+                GameObject newPedestrian = Instantiate(selectedPrefab, hit.position, Quaternion.identity);
+                newPedestrian.transform.SetParent(PedestrianRoot);
             }
 
             yield return new WaitForSeconds(spawnDelay);
