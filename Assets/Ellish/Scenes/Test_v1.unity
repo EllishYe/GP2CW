@@ -183,12 +183,16 @@ MonoBehaviour:
   vehicleStopDistance: 12
   crosswalkMeshHeight: 0.03
   crosswalkMaterial: {fileID: 2100000, guid: afa37e4db7492b843b23ec712d393063, type: 2}
-  crosswalkObjectName: Crosswalk_Mesh
+  fourWayCrosswalkObjectName: Crosswalk_FourWay_Walkable_Mesh
+  nonFourWayCrosswalkObjectName: Crosswalk_NonFourWay_Visual_Mesh
   walkableLayerName: Walkable
-  addCrosswalkMeshCollider: 1
+  addFourWayMeshCollider: 1
+  addNonFourWayMeshCollider: 0
   skipDeadEnds: 1
-  crosswalkMeshObject: {fileID: 0}
+  fourWayCrosswalkMeshObject: {fileID: 0}
+  nonFourWayCrosswalkMeshObject: {fileID: 0}
   crosswalks: []
+  fourWayIntersections: []
 --- !u!4 &178551623
 Transform:
   m_ObjectHideFlags: 0
@@ -476,6 +480,11 @@ MonoBehaviour:
   startPointColor: {r: 1, g: 0.49694997, b: 0, a: 1}
   endPointColor: {r: 1, g: 0, b: 0, a: 1}
   endpointSize: 1.2
+  showVehicleControlPoints: 1
+  vehicleStartPointColor: {r: 0, g: 1, b: 1, a: 1}
+  vehicleStopPointColor: {r: 1, g: 0, b: 1, a: 1}
+  vehicleControlLineColor: {r: 0, g: 0, b: 1, a: 1}
+  vehicleControlPointSize: 1.5
 --- !u!114 &1263235032
 MonoBehaviour:
   m_ObjectHideFlags: 0

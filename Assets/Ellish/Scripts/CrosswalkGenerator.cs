@@ -20,6 +20,34 @@ public class CrosswalkData
     public Vector3 outerCenter;
 }
 
+[System.Serializable]
+public class FourWayIntersectionArmData
+{
+    public int armIndex;
+    public int axisGroupIndex;
+    public int crosswalkId;
+    public int connectedEdgeId;
+    public RoadKind roadKind;
+
+    public Vector2 planarOutwardDirection;
+    public Vector3 outwardDirection;
+    public Vector3 innerCenter;
+    public Vector3 outerCenter;
+
+    public List<int> incomingLaneIds = new List<int>();
+    public List<int> outgoingLaneIds = new List<int>();
+}
+
+[System.Serializable]
+public class FourWayIntersectionData
+{
+    public int id;
+    public int junctionId;
+    public Vector2 planarCenter;
+    public Vector3 center;
+    public List<FourWayIntersectionArmData> arms = new List<FourWayIntersectionArmData>();
+}
+
 public class CrosswalkGenerator : MonoBehaviour
 {
     [Header("Crosswalk Area")]
@@ -39,6 +67,7 @@ public class CrosswalkGenerator : MonoBehaviour
     [HideInInspector] public GameObject fourWayCrosswalkMeshObject;
     [HideInInspector] public GameObject nonFourWayCrosswalkMeshObject;
     public List<CrosswalkData> crosswalks = new List<CrosswalkData>();
+    public List<FourWayIntersectionData> fourWayIntersections = new List<FourWayIntersectionData>();
 
     void OnValidate()
     {
@@ -64,6 +93,7 @@ public class CrosswalkGenerator : MonoBehaviour
 
         CrosswalkMeshBuffers buffers = BuildCrosswalkBuffers(roadNetworkGenerator, innerDistance, outerDistance);
         ApplyVehicleControlPoints(roadNetworkGenerator, innerDistance, outerDistance);
+        BuildFourWayIntersectionData(roadNetworkGenerator);
 
         Mesh fourWayMesh = CreateMesh(buffers.fourWay, "Four Way Crosswalk Mesh");
         Mesh nonFourWayMesh = CreateMesh(buffers.nonFourWay, "Non Four Way Crosswalk Mesh");
@@ -86,6 +116,7 @@ public class CrosswalkGenerator : MonoBehaviour
     public void Clear(Transform parent)
     {
         crosswalks.Clear();
+        fourWayIntersections.Clear();
 
         fourWayCrosswalkMeshObject = ResolveExisting(parent, fourWayCrosswalkObjectName, fourWayCrosswalkMeshObject);
         nonFourWayCrosswalkMeshObject = ResolveExisting(parent, nonFourWayCrosswalkObjectName, nonFourWayCrosswalkMeshObject);
@@ -97,6 +128,11 @@ public class CrosswalkGenerator : MonoBehaviour
 
         fourWayCrosswalkMeshObject = null;
         nonFourWayCrosswalkMeshObject = null;
+    }
+
+    public List<FourWayIntersectionData> GetFourWayIntersections()
+    {
+        return fourWayIntersections;
     }
 
     private CrosswalkMeshBuffers BuildCrosswalkBuffers(RoadNetworkGenerator roadNetworkGenerator, float innerDistance, float outerDistance)
@@ -202,6 +238,90 @@ public class CrosswalkGenerator : MonoBehaviour
         Vector2 offsetDirection = (RoadCoordinateUtility.WorldToPlanar(bestCrosswalk.outerCenter) - RoadCoordinateUtility.WorldToPlanar(bestCrosswalk.innerCenter)).normalized;
         offsetPoint = lanePoint + offsetDirection * offsetDistance;
         return true;
+    }
+
+    private void BuildFourWayIntersectionData(RoadNetworkGenerator roadNetworkGenerator)
+    {
+        List<AgentLaneData> agentLanes = roadNetworkGenerator.GetAgentLanes();
+        float matchTolerance = Mathf.Max(0.25f, roadNetworkGenerator.laneWidth * 0.25f);
+
+        foreach (Node node in CollectUniqueNodes(roadNetworkGenerator.Graph))
+        {
+            if (node.Edges.Count != 4)
+                continue;
+
+            int junctionId = node.GetHashCode();
+            FourWayIntersectionData intersection = new FourWayIntersectionData
+            {
+                id = fourWayIntersections.Count,
+                junctionId = junctionId,
+                planarCenter = new Vector2(node.X, node.Y),
+                center = RoadCoordinateUtility.PlanarToWorld(node.X, node.Y, crosswalkMeshHeight)
+            };
+
+            for (int i = 0; i < crosswalks.Count; i++)
+            {
+                CrosswalkData crosswalk = crosswalks[i];
+                if (!crosswalk.isAtFourWayJunction || crosswalk.junctionId != junctionId)
+                    continue;
+
+                Vector2 innerCenterPlanar = RoadCoordinateUtility.WorldToPlanar(crosswalk.innerCenter);
+                Vector2 outerCenterPlanar = RoadCoordinateUtility.WorldToPlanar(crosswalk.outerCenter);
+                Vector2 outwardDirectionPlanar = (outerCenterPlanar - innerCenterPlanar).normalized;
+
+                FourWayIntersectionArmData arm = new FourWayIntersectionArmData
+                {
+                    crosswalkId = crosswalk.id,
+                    connectedEdgeId = crosswalk.connectedEdgeId,
+                    roadKind = crosswalk.roadKind,
+                    planarOutwardDirection = outwardDirectionPlanar,
+                    outwardDirection = new Vector3(outwardDirectionPlanar.x, 0f, outwardDirectionPlanar.y),
+                    innerCenter = crosswalk.innerCenter,
+                    outerCenter = crosswalk.outerCenter
+                };
+
+                AddLaneIdsForCrosswalkArm(arm, crosswalk, agentLanes, matchTolerance);
+                intersection.arms.Add(arm);
+            }
+
+            SortAndAssignFourWayArmGroups(intersection.arms);
+            if (intersection.arms.Count == 4)
+                fourWayIntersections.Add(intersection);
+        }
+    }
+
+    private static void AddLaneIdsForCrosswalkArm(FourWayIntersectionArmData arm, CrosswalkData crosswalk, List<AgentLaneData> agentLanes, float matchTolerance)
+    {
+        if (agentLanes == null) return;
+
+        Vector2 innerLeft = RoadCoordinateUtility.WorldToPlanar(crosswalk.innerLeft);
+        Vector2 innerRight = RoadCoordinateUtility.WorldToPlanar(crosswalk.innerRight);
+
+        for (int i = 0; i < agentLanes.Count; i++)
+        {
+            AgentLaneData lane = agentLanes[i];
+            if (DistancePointToSegment(lane.planarEnd, innerLeft, innerRight) <= matchTolerance)
+                arm.incomingLaneIds.Add(lane.id);
+
+            if (DistancePointToSegment(lane.planarStart, innerLeft, innerRight) <= matchTolerance)
+                arm.outgoingLaneIds.Add(lane.id);
+        }
+    }
+
+    private static void SortAndAssignFourWayArmGroups(List<FourWayIntersectionArmData> arms)
+    {
+        arms.Sort((a, b) =>
+        {
+            float angleA = Mathf.Atan2(a.planarOutwardDirection.y, a.planarOutwardDirection.x);
+            float angleB = Mathf.Atan2(b.planarOutwardDirection.y, b.planarOutwardDirection.x);
+            return angleA.CompareTo(angleB);
+        });
+
+        for (int i = 0; i < arms.Count; i++)
+        {
+            arms[i].armIndex = i;
+            arms[i].axisGroupIndex = i % 2;
+        }
     }
 
     private GameObject CreateMeshObject(string objectName, Mesh mesh, Transform parent, bool addMeshCollider)
