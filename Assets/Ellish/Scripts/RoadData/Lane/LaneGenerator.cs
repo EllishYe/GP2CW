@@ -11,8 +11,9 @@ public static class LaneGenerator
 {
     public static List<LaneGeometry> GenerateLanes(
         Graph graph,
-        float cutDistance = 0.6f,// Junction Radius + safety margin（原来是8）
-        float laneOffset = 0.3f// Lane width/2（原来是4）
+        float cutDistance = 8f,// Junction Radius + safety margin
+        float laneOffset = 1.75f,// Lane width/2
+        bool skipShortEdges = true
         )
     {
         List<LaneGeometry> lanes = new List<LaneGeometry>();
@@ -32,9 +33,9 @@ public static class LaneGenerator
 
             float length = Vector2.Distance(A, B);
 
-            // jump short edges, as they may not have enough space for lanes after cutting 暂时去掉
-            //if (length < cutDistance * 2f) 
-            //    continue;
+            // Jump short edges, as they may not have enough space for lanes after cutting.
+            if (skipShortEdges && length < cutDistance * 2f)
+                continue;
 
             // ===== cut =====
             Vector2 start = A + dir * cutDistance;

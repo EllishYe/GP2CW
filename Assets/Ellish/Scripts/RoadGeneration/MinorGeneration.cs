@@ -18,16 +18,17 @@ namespace RoadGeneration
 
         private readonly System.Random rand;
         private readonly int border;
+        private readonly float roadLength;
         private readonly int maxSegment;
         private readonly float deleteCrossingProbability;
 
         private readonly Graph graph;
 
-        private const int RoadLength = 10;
 
         public MinorGenerator(
             System.Random seededRandom,
             int mapSize,
+            float segmentLength,
             int maxRoad,
             float crossingDeletionProbability,
             Graph graphToBuild,
@@ -41,6 +42,7 @@ namespace RoadGeneration
 
             rand = seededRandom;
             border = mapSize;
+            roadLength = segmentLength;
             maxSegment = maxRoad;
             deleteCrossingProbability = crossingDeletionProbability;
 
@@ -306,14 +308,14 @@ namespace RoadGeneration
 
         private bool IsClose(Node a, Node b)
         {
-            float idealRadius = RoadLength * 0.7f;
+            float idealRadius = roadLength * 0.7f;
             if (a.getDistance(b) < idealRadius) return true;
             return false;
         }
 
         private RoadSegment CalcNewRoadSegment(Node nodeFrom, Vector2 dirVector, int leanIteration)
         {
-            var newNodeTo = new Node(nodeFrom.X + dirVector.normalized.x * RoadLength, nodeFrom.Y + dirVector.normalized.y * RoadLength);
+            var newNodeTo = new Node(nodeFrom.X + dirVector.normalized.x * roadLength, nodeFrom.Y + dirVector.normalized.y * roadLength);
             return new RoadSegment(nodeFrom, newNodeTo, leanIteration);
         }
 

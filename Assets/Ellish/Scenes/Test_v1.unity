@@ -148,14 +148,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 139b10ffad462ce4fbc2968ede9b59f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoadNetworkGenerator
-  mapSize: 100
+  mapSize: 1000
+  roadSegmentLength: 100
   majorRoadCount: 200
   maxLeanAngle: 20
   branchProbability: 0.1
   minorRoadCount: 400
   deletionProbability: 0.2
-  roadWidth: 2
+  laneWidth: 3.5
+  junctionCutDistance: 8
+  deriveRoadWidthFromLaneWidth: 1
+  roadWidth: 7
+  skipLanesTooShortForJunctionCut: 1
+  agentLaneHeight: 0
   lanes: []
+  agentLanes: []
 --- !u!4 &995044734
 Transform:
   m_ObjectHideFlags: 0

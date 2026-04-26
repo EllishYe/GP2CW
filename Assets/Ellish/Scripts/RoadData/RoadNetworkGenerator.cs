@@ -10,7 +10,8 @@ using UnityEngine;
 public class RoadNetworkGenerator : MonoBehaviour
 {
     [Header("Map Settings")]
-    public int mapSize = 100;
+    public int mapSize = 1000;
+    public float roadSegmentLength = 100f;
 
     [Header("Major Roads")]
     public int majorRoadCount = 200;
@@ -21,8 +22,12 @@ public class RoadNetworkGenerator : MonoBehaviour
     public int minorRoadCount = 400;
     public float deletionProbability = 0.2f;
     
-    [Header("Road Width")]
-    public float roadWidth = 2f;
+    [Header("Road Dimensions")]
+    public float laneWidth = 3.5f;
+    public float junctionCutDistance = 8f;
+    public bool deriveRoadWidthFromLaneWidth = true;
+    public float roadWidth = 7f;
+    public bool skipLanesTooShortForJunctionCut = true;
 
     [Header("Agent Interface")]
     public float agentLaneHeight = 0f;
@@ -41,6 +46,19 @@ public class RoadNetworkGenerator : MonoBehaviour
         Generate();
     }
 
+    void OnValidate()
+    {
+        mapSize = Mathf.Max(1, mapSize);
+        roadSegmentLength = Mathf.Max(1f, roadSegmentLength);
+        laneWidth = Mathf.Max(0.1f, laneWidth);
+        junctionCutDistance = Mathf.Max(0f, junctionCutDistance);
+        if (deriveRoadWidthFromLaneWidth)
+            roadWidth = laneWidth * 2f;
+        else
+            roadWidth = Mathf.Max(0.1f, roadWidth);
+        agentLaneHeight = Mathf.Max(0f, agentLaneHeight);
+    }
+
     public void Generate()
     {
         graph = new Graph();
@@ -51,6 +69,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         MajorGenerator majorGen = new MajorGenerator(
             rand,
             mapSize,
+            roadSegmentLength,
             majorRoadCount,
             maxLeanAngle,
             branchProbability,
@@ -64,6 +83,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         MinorGenerator minorGen = new MinorGenerator(
             rand,
             mapSize,
+            roadSegmentLength,
             minorRoadCount,
             deletionProbability,
             graph,
@@ -77,7 +97,10 @@ public class RoadNetworkGenerator : MonoBehaviour
         Debug.Log("Road Network Generated!");
 
         // Generate Lanes from the graph's edges
-        lanes = LaneGenerator.GenerateLanes(graph);
+        if (deriveRoadWidthFromLaneWidth)
+            roadWidth = laneWidth * 2f;
+
+        lanes = LaneGenerator.GenerateLanes(graph, junctionCutDistance, laneWidth * 0.5f, skipLanesTooShortForJunctionCut);
         agentLanes = AgentLaneExporter.Export(lanes, agentLaneHeight);
         Debug.Log("Lane count: " + lanes.Count);
         Debug.Log("Agent lane count: " + agentLanes.Count);

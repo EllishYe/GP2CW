@@ -17,17 +17,18 @@ namespace RoadGeneration
 
         private readonly System.Random rand;
         private readonly int border;
+        private readonly float roadLength;
         private readonly int maxSegment;
         private readonly int maxLean;
         private readonly float branchProbability;
 
         private readonly Graph graph;
 
-        private const int RoadLength = 10;
 
         public MajorGenerator(
             System.Random seededRandom,
             int mapSize,
+            float segmentLength,
             int maxRoad,
             int maxDegree,
             float branchingChance,
@@ -39,6 +40,7 @@ namespace RoadGeneration
 
             rand = seededRandom;
             border = mapSize;
+            roadLength = segmentLength;
             maxSegment = maxRoad;
             maxLean = maxDegree;
             branchProbability = branchingChance;
@@ -212,8 +214,8 @@ namespace RoadGeneration
             int randomDirX = rand.Next(-100, 100);
             int randomDirY = rand.Next(-100, 100);
             var startDir = new Vector2(randomDirX, randomDirY);
-            var starterNodeTo1 = new Node(startNode.X + startDir.normalized.x * RoadLength, starterY + startDir.normalized.y * RoadLength);
-            var starterNodeTo2 = new Node(startNode.X - startDir.normalized.x * RoadLength, starterY - startDir.normalized.y * RoadLength);
+            var starterNodeTo1 = new Node(startNode.X + startDir.normalized.x * roadLength, starterY + startDir.normalized.y * roadLength);
+            var starterNodeTo2 = new Node(startNode.X - startDir.normalized.x * roadLength, starterY - startDir.normalized.y * roadLength);
 
             //Thirdly We make two starting RoadSegment from these
             var starterSegment1 = new RoadSegment(startNode, starterNodeTo1, 0);
@@ -255,14 +257,14 @@ namespace RoadGeneration
 
         private bool IsClose(Node a, Node b)
         {
-            float idealRadius = RoadLength * 0.8f;
+            float idealRadius = roadLength * 0.8f;
             if (a.getDistance(b) < idealRadius) return true;
             return false;
         }
 
         private RoadSegment CalcNewRoadSegment(Node nodeFrom, Vector2 dirVector, int leanIteration)
         {
-            var newNodeTo = new Node(nodeFrom.X + dirVector.normalized.x * RoadLength, nodeFrom.Y + dirVector.normalized.y * RoadLength);
+            var newNodeTo = new Node(nodeFrom.X + dirVector.normalized.x * roadLength, nodeFrom.Y + dirVector.normalized.y * roadLength);
             return new RoadSegment(nodeFrom, newNodeTo, leanIteration);
         }
 
