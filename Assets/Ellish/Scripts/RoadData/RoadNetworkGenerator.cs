@@ -45,6 +45,8 @@ public class RoadNetworkGenerator : MonoBehaviour
     public float roadMeshHeight = 0.01f;
     public Material roadMaterial;
     public string roadMeshObjectName = "Road_Surface_Mesh";
+    public bool addRoadMeshCollider = true;
+    public string roadLayerName = "Road";
     [HideInInspector] public GameObject roadMeshObject;
 
     private Graph graph;
@@ -193,6 +195,14 @@ public class RoadNetworkGenerator : MonoBehaviour
         meshFilter.sharedMesh = mesh;
         if (roadMaterial != null)
             meshRenderer.sharedMaterial = roadMaterial;
+
+        if (addRoadMeshCollider)
+        {
+            MeshCollider meshCollider = roadMeshObject.AddComponent<MeshCollider>();
+            meshCollider.sharedMesh = mesh;
+        }
+
+        AssignLayerIfExists(roadMeshObject, roadLayerName);
     }
 
     private void ApplyDerivedRoadWidths()
@@ -224,6 +234,27 @@ public class RoadNetworkGenerator : MonoBehaviour
     public List<AgentLaneData> GetAgentLanes()
     {
         return agentLanes;
+    }
+
+    private static void AssignLayerIfExists(GameObject target, string layerName)
+    {
+        if (target == null || string.IsNullOrWhiteSpace(layerName)) return;
+
+        int layer = LayerMask.NameToLayer(layerName);
+        if (layer < 0)
+        {
+            Debug.LogWarning($"RoadNetworkGenerator: Layer '{layerName}' does not exist. Road object stays on its current layer.");
+            return;
+        }
+
+        SetLayerRecursively(target, layer);
+    }
+
+    private static void SetLayerRecursively(GameObject target, int layer)
+    {
+        target.layer = layer;
+        for (int i = 0; i < target.transform.childCount; i++)
+            SetLayerRecursively(target.transform.GetChild(i).gameObject, layer);
     }
 
     // 对外只读暴露用于调试/可视化
