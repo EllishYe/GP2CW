@@ -9,6 +9,9 @@ using UnityEngine;
 
 public class RoadNetworkGenerator : MonoBehaviour
 {
+    [Header("Runtime")]
+    public bool generateOnStart = true;
+
     [Header("Map Settings")]
     public int mapSize = 1000;
     public float roadSegmentLength = 100f;
@@ -32,6 +35,13 @@ public class RoadNetworkGenerator : MonoBehaviour
     [Header("Agent Interface")]
     public float agentLaneHeight = 0f;
 
+    [Header("Generated Road Mesh")]
+    public bool generateRoadMesh = true;
+    public float roadMeshHeight = 0.01f;
+    public Material roadMaterial;
+    public string roadMeshObjectName = "Road_Surface_Mesh";
+    [HideInInspector] public GameObject roadMeshObject;
+
     private Graph graph;
 
     public List<LaneGeometry> lanes;
@@ -43,7 +53,8 @@ public class RoadNetworkGenerator : MonoBehaviour
 
     void Start()
     {
-        Generate();
+        if (generateOnStart)
+            Generate();
     }
 
     void OnValidate()
@@ -57,10 +68,12 @@ public class RoadNetworkGenerator : MonoBehaviour
         else
             roadWidth = Mathf.Max(0.1f, roadWidth);
         agentLaneHeight = Mathf.Max(0f, agentLaneHeight);
+        roadMeshHeight = Mathf.Max(0f, roadMeshHeight);
     }
 
     public void Generate()
     {
+        ClearGeneratedObjects();
         graph = new Graph();
 
         System.Random rand = new System.Random(12345); // 固定种子（方便调试）
@@ -114,6 +127,56 @@ public class RoadNetworkGenerator : MonoBehaviour
         //roadPolygons = RoadFootprintGenerator.Generate(graph, 2f);//改参的入口
         footprint = RoadFootprintGenerator.Generate(polylines, roadWidth);
 
+        if (generateRoadMesh)
+            BuildRoadMeshObject();
+
+    }
+
+    public void ClearGeneratedObjects()
+    {
+        graph = null;
+        lanes = null;
+        agentLanes = null;
+        polylines = null;
+        roadPolygons = null;
+        footprint = null;
+
+        if (roadMeshObject == null)
+        {
+            Transform existing = transform.Find(roadMeshObjectName);
+            if (existing != null)
+                roadMeshObject = existing.gameObject;
+        }
+
+        if (roadMeshObject == null) return;
+
+        if (Application.isPlaying)
+            Destroy(roadMeshObject);
+        else
+            DestroyImmediate(roadMeshObject);
+
+        roadMeshObject = null;
+    }
+
+    private void BuildRoadMeshObject()
+    {
+        if (!RoadMeshBuilder.TryBuildRoadMesh(footprint, roadMeshHeight, out Mesh mesh, out TriangulateResult result))
+        {
+            Debug.LogWarning($"Road mesh triangulation failed: {result}");
+            return;
+        }
+
+        roadMeshObject = new GameObject(roadMeshObjectName);
+        roadMeshObject.transform.SetParent(transform, false);
+        roadMeshObject.transform.localPosition = Vector3.zero;
+        roadMeshObject.transform.localRotation = Quaternion.identity;
+        roadMeshObject.transform.localScale = Vector3.one;
+
+        MeshFilter meshFilter = roadMeshObject.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = roadMeshObject.AddComponent<MeshRenderer>();
+        meshFilter.sharedMesh = mesh;
+        if (roadMaterial != null)
+            meshRenderer.sharedMaterial = roadMaterial;
     }
 
     internal Graph GetGraph()
