@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
+#nullable enable
+
 #if USINGZ
 namespace Clipper2ZLib
 #else

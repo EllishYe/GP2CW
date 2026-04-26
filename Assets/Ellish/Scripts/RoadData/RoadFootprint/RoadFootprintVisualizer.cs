@@ -52,8 +52,8 @@ public class RoadFootprintVisualizer : MonoBehaviour
                 if (poly == null || poly.points == null || poly.points.Count < 2) continue;
                 for (int i = 0; i < poly.points.Count; i++)
                 {
-                    Vector3 a = poly.points[i];
-                    Vector3 b = poly.points[(i + 1) % poly.points.Count];
+                    Vector3 a = RoadCoordinateUtility.PlanarToWorld(poly.points[i]);
+                    Vector3 b = RoadCoordinateUtility.PlanarToWorld(poly.points[(i + 1) % poly.points.Count]);
                     Gizmos.DrawLine(a, b);
                 }
             }
@@ -125,7 +125,7 @@ public class RoadFootprintVisualizer : MonoBehaviour
     private static Vector3 Point64ToVector3(Point64 p)
     {
         // 与 PolylineBuilder 中的 ToPoint64 对应的反向转换
-        return new Vector3(p.X / 1000f,  p.Y / 1000f, 0f);
+        return RoadCoordinateUtility.PlanarToWorld(p.X / 1000f, p.Y / 1000f);
     }
 
     #region Polyline Debug

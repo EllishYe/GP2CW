@@ -154,6 +154,7 @@ MonoBehaviour:
   branchProbability: 0.1
   minorRoadCount: 400
   deletionProbability: 0.2
+  roadWidth: 2
   lanes: []
 --- !u!4 &995044734
 Transform:

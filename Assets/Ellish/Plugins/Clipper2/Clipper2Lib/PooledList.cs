@@ -14,6 +14,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+#nullable enable
+
 #if USINGZ
 namespace Clipper2ZLib
 #else

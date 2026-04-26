@@ -29,8 +29,9 @@ public class RoadVisualizer : MonoBehaviour
 
     void DrawNode(Vector2 pos, float size, Color color)
     {
-        Debug.DrawLine(pos + Vector2.up * size, pos - Vector2.up * size, color);
-        Debug.DrawLine(pos + Vector2.left * size, pos - Vector2.left * size, color);
+        Vector3 center = RoadCoordinateUtility.PlanarToWorld(pos);
+        Debug.DrawLine(center + Vector3.forward * size, center - Vector3.forward * size, color);
+        Debug.DrawLine(center + Vector3.left * size, center - Vector3.left * size, color);
     }
 
     void OnDrawGizmos()
@@ -44,8 +45,8 @@ public class RoadVisualizer : MonoBehaviour
         UnityEditor.Handles.color = majorLineColor;
         foreach (var edge in graph.MajorEdges)
         {
-            Vector3 a = new Vector3(edge.NodeA.X, 0, edge.NodeA.Y);
-            Vector3 b = new Vector3(edge.NodeB.X, 0, edge.NodeB.Y);
+            Vector3 a = RoadCoordinateUtility.PlanarToWorld(edge.NodeA.X, edge.NodeA.Y);
+            Vector3 b = RoadCoordinateUtility.PlanarToWorld(edge.NodeB.X, edge.NodeB.Y);
             if (majorLineThickness <= 1f)
                 Gizmos.DrawLine(a, b);
             else
@@ -55,8 +56,8 @@ public class RoadVisualizer : MonoBehaviour
         Gizmos.color = majorLineColor;
         foreach (var edge in graph.MajorEdges)
         {
-            Vector3 a = new Vector3(edge.NodeA.X, edge.NodeA.Y, 0);
-            Vector3 b = new Vector3(edge.NodeB.X, edge.NodeB.Y, 0);
+            Vector3 a = RoadCoordinateUtility.PlanarToWorld(edge.NodeA.X, edge.NodeA.Y);
+            Vector3 b = RoadCoordinateUtility.PlanarToWorld(edge.NodeB.X, edge.NodeB.Y);
             Gizmos.DrawLine(a, b);
         }
 #endif
@@ -66,8 +67,8 @@ public class RoadVisualizer : MonoBehaviour
         UnityEditor.Handles.color = minorLineColor;
         foreach (var edge in graph.MinorEdges)
         {
-            Vector3 a = new Vector3(edge.NodeA.X, 0, edge.NodeA.Y);
-            Vector3 b = new Vector3(edge.NodeB.X, 0, edge.NodeB.Y);
+            Vector3 a = RoadCoordinateUtility.PlanarToWorld(edge.NodeA.X, edge.NodeA.Y);
+            Vector3 b = RoadCoordinateUtility.PlanarToWorld(edge.NodeB.X, edge.NodeB.Y);
             if (minorLineThickness <= 1f)
                 Gizmos.DrawLine(a, b);
             else
@@ -77,8 +78,8 @@ public class RoadVisualizer : MonoBehaviour
         Gizmos.color = minorLineColor;
         foreach (var edge in graph.MinorEdges)
         {
-            Vector3 a = new Vector3(edge.NodeA.X, edge.NodeA.Y, 0);
-            Vector3 b = new Vector3(edge.NodeB.X, edge.NodeB.Y, 0);
+            Vector3 a = RoadCoordinateUtility.PlanarToWorld(edge.NodeA.X, edge.NodeA.Y);
+            Vector3 b = RoadCoordinateUtility.PlanarToWorld(edge.NodeB.X, edge.NodeB.Y);
             Gizmos.DrawLine(a, b);
         }
 #endif
@@ -90,7 +91,7 @@ public class RoadVisualizer : MonoBehaviour
         {
             foreach (var jd in network.nodes)
             {
-                Vector3 pos = new Vector3(jd.position.x, 0, jd.position.y);
+                Vector3 pos = RoadCoordinateUtility.PlanarToWorld(jd.position);
                 Gizmos.DrawSphere(pos, nodeSize);
             }
         }

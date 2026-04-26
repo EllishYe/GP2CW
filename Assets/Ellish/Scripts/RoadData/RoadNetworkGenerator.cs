@@ -24,9 +24,13 @@ public class RoadNetworkGenerator : MonoBehaviour
     [Header("Road Width")]
     public float roadWidth = 2f;
 
+    [Header("Agent Interface")]
+    public float agentLaneHeight = 0f;
+
     private Graph graph;
 
     public List<LaneGeometry> lanes;
+    public List<AgentLaneData> agentLanes;
     private Paths64 polylines;
     public List<RoadPolygon> roadPolygons;
     private Paths64 footprint;
@@ -74,7 +78,9 @@ public class RoadNetworkGenerator : MonoBehaviour
 
         // Generate Lanes from the graph's edges
         lanes = LaneGenerator.GenerateLanes(graph);
+        agentLanes = AgentLaneExporter.Export(lanes, agentLaneHeight);
         Debug.Log("Lane count: " + lanes.Count);
+        Debug.Log("Agent lane count: " + agentLanes.Count);
 
 
         // Footprint
@@ -90,6 +96,11 @@ public class RoadNetworkGenerator : MonoBehaviour
     internal Graph GetGraph()
     {
         return graph;
+    }
+
+    public List<AgentLaneData> GetAgentLanes()
+    {
+        return agentLanes;
     }
 
     // 对外只读暴露用于调试/可视化

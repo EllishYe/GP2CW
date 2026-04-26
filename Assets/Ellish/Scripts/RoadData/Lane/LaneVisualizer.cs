@@ -51,8 +51,8 @@ public class LaneVisualizer : MonoBehaviour
 
         //    float arrowSize = 1.0f;
 
-        //    Vector3 right = Quaternion.Euler(0, 0, 30) * -dir;
-        //    Vector3 left = Quaternion.Euler(0, 0, -30) * -dir;
+        //    Vector3 right = Quaternion.Euler(0, 30, 0) * -dir;
+        //    Vector3 left = Quaternion.Euler(0, -30, 0) * -dir;
 
         //    Gizmos.color = Color.yellow;
         //    Gizmos.DrawLine(mid, mid + right * arrowSize);
@@ -65,8 +65,8 @@ public class LaneVisualizer : MonoBehaviour
         for (int i = 0; i < lanes.Count; i++)
         {
             var lane = lanes[i];
-            Vector3 start = new Vector3(lane.start.x, 0, lane.start.y);
-            Vector3 end = new Vector3(lane.end.x, 0, lane.end.y);
+            Vector3 start = RoadCoordinateUtility.PlanarToWorld(lane.start);
+            Vector3 end = RoadCoordinateUtility.PlanarToWorld(lane.end);
 
             // »­Ïß£¨¹Ì¶¨°×É«£©
             Gizmos.color = Color.white;
@@ -78,8 +78,8 @@ public class LaneVisualizer : MonoBehaviour
             float arrowSize = 1.0f;
 
             Gizmos.color = (i % 2 == 0) ? colorForward : colorBackward;
-            Vector3 right = Quaternion.Euler(0, 0, 30) * -dir;
-            Vector3 left = Quaternion.Euler(0, 0, -30) * -dir;
+            Vector3 right = Quaternion.Euler(0, 30, 0) * -dir;
+            Vector3 left = Quaternion.Euler(0, -30, 0) * -dir;
             Gizmos.DrawLine(mid, mid + right * arrowSize);
             Gizmos.DrawLine(mid, mid + left * arrowSize);
 
