@@ -240,8 +240,23 @@ public class TestCityBuilder : MonoBehaviour
             Vector3 unityEnd = new Vector3(rawEnd.x, 0f, rawEnd.y);
             // ==========================================
 
-            p1.position = unityStart;
-            p2.position = unityEnd;
+            // ================= 🚨 新增：计算右侧偏移 =================
+            // 1. 设置车道偏移距离（比如马路总宽是4米，中心线到右车道中心大概偏移 1.5 米）
+            float laneOffset = -2.0f;
+
+            // 2. 算出这条路的前进方向
+            Vector3 direction = (unityEnd - unityStart).normalized;
+
+            // 3. 利用叉积，算出这条路绝对的“右方”向量
+            Vector3 rightVector = Vector3.Cross(Vector3.up, direction).normalized;
+
+            // 4. 把原来的起点和终点，都顺着右方向量推开一段距离！
+            Vector3 offsetStart = unityStart + rightVector * laneOffset;
+            Vector3 offsetEnd = unityEnd + rightVector * laneOffset;
+            // =======================================================
+
+            p1.position = offsetStart;
+            p2.position = offsetEnd;
 
             myLane.pathPoints.Add(p1);
             myLane.pathPoints.Add(p2);
@@ -333,7 +348,7 @@ public class TestCityBuilder : MonoBehaviour
     // 拓扑连线核心逻辑：把散落的线段缝合成交通网
     private void ConnectLanes(List<LaneData> lanes)
     {
-        float connectionThreshold = 0.5f; // 距离小于 0.5 米就认为在同一个路口
+        float connectionThreshold = 0.02f; // 距离小于 0.5 米就认为在同一个路口
 
         foreach (LaneData laneA in lanes)
         {

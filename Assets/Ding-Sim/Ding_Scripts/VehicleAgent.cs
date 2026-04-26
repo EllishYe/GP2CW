@@ -169,7 +169,7 @@ public class VehicleAgent : MonoBehaviour
             rb.MoveRotation(Quaternion.Slerp(rb.rotation, lookRotation, Time.fixedDeltaTime * turnSpeed));
         }
 
-        if (Vector3.Distance(transform.position, flatTarget) < 0.1f)
+        if (Vector3.Distance(transform.position, flatTarget) < 1.0f)
         {
             currentPointIndex++;
             if (currentPointIndex >= currentLane.pathPoints.Count)
@@ -203,7 +203,7 @@ public class VehicleAgent : MonoBehaviour
         if (!Application.isPlaying) return;
 
         Vector3 sensorStartPos = transform.TransformPoint(sensorOffset);
-        float castRadius = 1.5f;
+        float castRadius = 1f;
 
         // 根据当前状态决定雷达的颜色
         if (currentState == CarState.Braking)

@@ -89,8 +89,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VehicleAgent
   currentState: 0
   maxSpeed: 0
-  turnSpeed: 10
-  sensorLength: 1
+  turnSpeed: 15
+  sensorLength: 0.6
   sensorOffset: {x: 0, y: 0.5, z: 1.8}
 --- !u!54 &9087683753510595962
 Rigidbody:

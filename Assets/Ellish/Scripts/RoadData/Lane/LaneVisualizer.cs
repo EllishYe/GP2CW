@@ -65,8 +65,8 @@ public class LaneVisualizer : MonoBehaviour
         for (int i = 0; i < lanes.Count; i++)
         {
             var lane = lanes[i];
-            Vector3 start = new Vector3(lane.start.x, lane.start.y, 0);
-            Vector3 end = new Vector3(lane.end.x, lane.end.y, 0);
+            Vector3 start = new Vector3(lane.start.x, 0, lane.start.y);
+            Vector3 end = new Vector3(lane.end.x, 0, lane.end.y);
 
             // »­Ïß£¨¹Ì¶¨°×É«£©
             Gizmos.color = Color.white;

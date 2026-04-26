@@ -44,8 +44,8 @@ public class RoadVisualizer : MonoBehaviour
         UnityEditor.Handles.color = majorLineColor;
         foreach (var edge in graph.MajorEdges)
         {
-            Vector3 a = new Vector3(edge.NodeA.X, edge.NodeA.Y, 0);
-            Vector3 b = new Vector3(edge.NodeB.X, edge.NodeB.Y, 0);
+            Vector3 a = new Vector3(edge.NodeA.X, 0, edge.NodeA.Y);
+            Vector3 b = new Vector3(edge.NodeB.X, 0, edge.NodeB.Y);
             if (majorLineThickness <= 1f)
                 Gizmos.DrawLine(a, b);
             else
@@ -66,8 +66,8 @@ public class RoadVisualizer : MonoBehaviour
         UnityEditor.Handles.color = minorLineColor;
         foreach (var edge in graph.MinorEdges)
         {
-            Vector3 a = new Vector3(edge.NodeA.X, edge.NodeA.Y, 0);
-            Vector3 b = new Vector3(edge.NodeB.X, edge.NodeB.Y, 0);
+            Vector3 a = new Vector3(edge.NodeA.X, 0, edge.NodeA.Y);
+            Vector3 b = new Vector3(edge.NodeB.X, 0, edge.NodeB.Y);
             if (minorLineThickness <= 1f)
                 Gizmos.DrawLine(a, b);
             else
@@ -90,7 +90,7 @@ public class RoadVisualizer : MonoBehaviour
         {
             foreach (var jd in network.nodes)
             {
-                Vector3 pos = new Vector3(jd.position.x, jd.position.y, 0);
+                Vector3 pos = new Vector3(jd.position.x, 0, jd.position.y);
                 Gizmos.DrawSphere(pos, nodeSize);
             }
         }
