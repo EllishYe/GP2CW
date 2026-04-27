@@ -7,23 +7,23 @@ public class VehicleAgent : MonoBehaviour
     public enum CarState
     {
         Driving,        
-        Braking,        // 刹车
+        Braking,        
         WaitingAtLight, // 等红绿灯 (预留)
         Yielding        // 避让行人 (预留)
     }
 
     [Header("状态")]
-    public CarState currentState = CarState.Driving; // 当前状态
+    public CarState currentState = CarState.Driving; 
 
 
     [Header("Driving parameters")]
     public float maxSpeed;       
     public float turnSpeed = 10f;
-    private float currentSpeed = 0f;  // 当前实际车速
+    private float currentSpeed = 0f;  
 
     [Header("sensor")]
-    public float sensorLength = 4f;   // 探测距离
-    public Vector3 sensorOffset = new Vector3(1, 0.5f, 1.8f); // 传感器位置（避免射到自己内部）
+    public float sensorLength = 4f;   
+    public Vector3 sensorOffset = new Vector3(1, 0.5f, 1.8f); 
 
     private TrafficGraph cityGraph;
     private LaneData currentLane;
@@ -33,7 +33,7 @@ public class VehicleAgent : MonoBehaviour
 
     void Start()
     {
-        maxSpeed = Random.Range(4f, 8f);
+        maxSpeed = Random.Range(8f, 16f);
         rb = GetComponent<Rigidbody>();
         //rb.centerOfMass = new Vector3(1f, -0.5f, 1f);
     }
@@ -134,7 +134,7 @@ public class VehicleAgent : MonoBehaviour
                 float distanceToStopLine = Vector3.Distance(transform.position, stopPos);
 
                 // 4. 如果距离停止线不到 3 米了，立刻踩刹车进入等灯状态！
-                if (distanceToStopLine < 3f)
+                if (distanceToStopLine < 8f)
                 {
                     currentState = CarState.WaitingAtLight;
                     return; // 结束判断
@@ -157,7 +157,6 @@ public class VehicleAgent : MonoBehaviour
         Vector3 targetPoint = currentLane.pathPoints[currentPointIndex].position;
         Vector3 flatTarget = new Vector3(targetPoint.x, rb.position.y, targetPoint.z);
 
-        // 注意：这里使用的是 currentSpeed 而不是固定的 speed 了
         Vector3 nextPosition = Vector3.MoveTowards(rb.position, flatTarget, currentSpeed * Time.fixedDeltaTime);
         rb.MovePosition(nextPosition);
 
@@ -183,9 +182,6 @@ public class VehicleAgent : MonoBehaviour
     {
         if (currentLane.nextLanes != null && currentLane.nextLanes.Count > 0)
         {
-            //int randomNextId = currentLane.nextLaneIds[Random.Range(0, currentLane.nextLaneIds.Count)];         
-            //currentLane = cityGraph.lanes[randomNextId];
-
             int randomChoice = Random.Range(0, currentLane.nextLanes.Count);
             currentLane = currentLane.nextLanes[randomChoice];
             currentPointIndex = 0;
@@ -196,16 +192,14 @@ public class VehicleAgent : MonoBehaviour
         }
     }
 
-    //画senser探针
+
     void OnDrawGizmos()
     {
-        // 如果游戏还没运行，或者车没被初始化，就不画
         if (!Application.isPlaying) return;
 
         Vector3 sensorStartPos = transform.TransformPoint(sensorOffset);
         float castRadius = 1f;
 
-        // 根据当前状态决定雷达的颜色
         if (currentState == CarState.Braking)
             Gizmos.color = Color.red;
         else if (currentState == CarState.Yielding)
@@ -213,14 +207,11 @@ public class VehicleAgent : MonoBehaviour
         else
             Gizmos.color = Color.green;
 
-        // 1. 画出雷达发射点（车头）的那个球
         Gizmos.DrawWireSphere(sensorStartPos, castRadius);
 
-        // 2. 画出雷达终点（探测极限距离）的那个球
         Vector3 sensorEndPos = sensorStartPos + transform.forward * sensorLength;
         Gizmos.DrawWireSphere(sensorEndPos, castRadius);
 
-        // 3. 把起点和终点连起来，你就看懂这个“粗面条”有多粗了！
         Gizmos.DrawLine(sensorStartPos + transform.right * castRadius, sensorEndPos + transform.right * castRadius);
         Gizmos.DrawLine(sensorStartPos - transform.right * castRadius, sensorEndPos - transform.right * castRadius);
     }

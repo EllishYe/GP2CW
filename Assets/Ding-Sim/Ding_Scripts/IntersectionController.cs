@@ -5,8 +5,8 @@ using UnityEngine;
 public class IntersectionController : MonoBehaviour
 {
     [Header("自动分配的相位车道 (无需手动拖拽)")]
-    public List<LaneData> phase1Lanes = new List<LaneData>(); // 例如：南北向
-    public List<LaneData> phase2Lanes = new List<LaneData>(); // 例如：东西向
+    public List<LaneData> phase1Lanes = new List<LaneData>(); 
+    public List<LaneData> phase2Lanes = new List<LaneData>(); 
 
     [Header("红绿灯时长设置 (秒)")]
     public float greenLightTime = 8f; 
@@ -16,7 +16,7 @@ public class IntersectionController : MonoBehaviour
     [Tooltip("探测距离12以内的endpoint，找出驶入道路")]
     public float detectionRadius = 12f; 
 
-    // 🚨 核心魔法：让路口自己去抓取周围的车道
+     //🚨 核心魔法：让路口自己去抓取周围的车道
     public void AutoDetectIncomingLanes()
     {
         phase1Lanes.Clear();
@@ -60,7 +60,7 @@ public class IntersectionController : MonoBehaviour
                 }
             }
         }
-        
+
         Debug.Log($"{gameObject.name} 自动绑定完成: 相位1({phase1Lanes.Count}条), 相位2({phase2Lanes.Count}条)");
     }
 
@@ -97,7 +97,7 @@ public class IntersectionController : MonoBehaviour
         foreach (LaneData lane in lanes)
         {
             //if (lane != null) lane.isRedLight = isRed;
-            lane.SetLightStatus(isRed);
+            //lane.SetLightStatus(isRed);
         }
     }
 }

@@ -8,6 +8,9 @@ public class PedestrianAI : MonoBehaviour
     private NavMeshAgent agent;
     private Animator animator;
 
+    private bool _isGoingHome = false; // 当前状态
+    private Vector3 _myHomePos;
+
     [Header("真实通勤设置")]
     public float minWaitTime = 1f;   // 等红绿灯/发呆的最短时间
     public float maxWaitTime = 4f;   // 发呆的最长时间
@@ -16,7 +19,7 @@ public class PedestrianAI : MonoBehaviour
     private float waitTimer;
     private bool isWaiting = false;
 
-    // 全城的兴趣点缓存
+    // all POI
     private static Transform[] allCityPOIs;
     private Transform currentDestination;
 
@@ -66,12 +69,27 @@ public class PedestrianAI : MonoBehaviour
                 Debug.DrawLine(transform.position + Vector3.up, currentDestination.position + Vector3.up, Color.green);
             }
 
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) { 
+                if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
             {
                 isWaiting = true;
                 waitTimer = Random.Range(minWaitTime, maxWaitTime);
             }
+            }
         }
+    }
+
+
+    public void InitHome(Vector3 homePosition)
+    {
+        _myHomePos = homePosition;
+    }
+
+    // 由 Manager 在晚上 18:00 时调用
+    public void GoHome()
+    {
+        _isGoingHome = true;
+        agent.SetDestination(_myHomePos); // 强行把寻路目标改成家！
     }
 
     // 🚨 核心逻辑：找一个符合人类逻辑的目的地

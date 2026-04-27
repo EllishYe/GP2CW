@@ -29,7 +29,26 @@ public class TestCityBuilder : MonoBehaviour
         if (myTrafficGraph == null)
             myTrafficGraph = GetComponent<TrafficGraph>();
 
+        //StartCoroutine(CityGenerationPipeline());
+    }
+
+    public void UI_TriggerGenerateAll()
+    {
+        // 1. 停止当前可能正在运行的任何生成协程，防止逻辑冲突
+        StopAllCoroutines();
+
+        // 2. (可选) 清理场景中已有的车辆和行人，实现“一键重置并生成”
+        // 注意：你需要确保你的脚本里有对这些 Root 物体的引用
+        GameObject oldVehicles = GameObject.Find("Vehicles_Root");
+        if (oldVehicles != null) Destroy(oldVehicles);
+
+        GameObject oldPeds = GameObject.Find("Pedestrians_Root"); // 假设你的行人管理器生成在这个根下
+        if (oldPeds != null) Destroy(oldPeds);
+
+        // 3. 重新启动完整的生成流水线
         StartCoroutine(CityGenerationPipeline());
+
+        Debug.Log("🚀 UI 事件：已触发完整生成流水线（PCG -> 桥接 -> 交通网 -> 代理生成）");
     }
 
     IEnumerator CityGenerationPipeline()
@@ -146,86 +165,194 @@ public class TestCityBuilder : MonoBehaviour
 
     }
 
-    // 4. 核心算法：权重随机挑选
+
     private GameObject GetRandomCarByWeight()
     {
-        // 第一步：算出所有汽车权重的总和
         float totalWeight = 0f;
         foreach (var data in carSpawnPool)
         {
             totalWeight += data.spawnWeight;
         }
 
-        // 第二步：在这个总和范围内，随机扔一个骰子
         float randomPoint = Random.Range(0, totalWeight);
 
-        // 第三步：看看这个骰子落在了哪个“扇形区域”里
         foreach (var data in carSpawnPool)
         {
-            // 不断减去当前物品的权重
             randomPoint -= data.spawnWeight;
-
-            // 如果减到小于等于 0，说明骰子就落在这个物品的区间里！
             if (randomPoint <= 0)
             {
                 return data.carPrefab;
             }
         }
-
-        // 防呆设计：理论上上面一定会 return，万一浮点数精度误差走到这里，默认返回第一个
         return carSpawnPool[0].carPrefab;
     }
 
 
+    //public void BridgeDataAndSpawnCars()
+    //{
+    //    // 确保数据已经生成
+    //    if (pcgGenerator.lanes == null || pcgGenerator.lanes.Count == 0)
+    //    {
+    //        Debug.LogError("车道数据为空！");
+    //        return;
+    //    }
+
+    //    List<AgentLaneData> processedLanes = AgentLaneExporter.Export(pcgGenerator.lanes);
+    //    Transform lanesRoot = new GameObject("AI_Lanes_Root").transform;
+    //    List<LaneData> myAILanes = new List<LaneData>();
+
+    //    foreach (AgentLaneData agentLane in processedLanes)
+    //    {
+    //        // 1. 创建 AI 车道实体
+    //        GameObject laneObj = new GameObject("AutoLane");
+    //        laneObj.transform.SetParent(lanesRoot);
+    //        LaneData myLane = laneObj.AddComponent<LaneData>();
+
+    //        Transform p1 = new GameObject("P_Start").transform;
+    //        Transform p2 = new GameObject("P_End").transform;
+    //        Transform p3 = new GameObject("P_Stop").transform;
+    //        p1.SetParent(laneObj.transform);
+    //        p2.SetParent(laneObj.transform);
+    //        p3.SetParent(laneObj.transform);
+
+    //        Vector3 unityStart = agentLane.startPoint;
+    //        Vector3 unityEnd = agentLane.endPoint;
+    //        Vector3 unityStop = agentLane.vehicleStopPoint;
+
+    //        p1.position = unityStart;
+    //        p2.position = unityEnd;
+    //        p3.position = unityStop;
+
+    //        myLane.pathPoints.Add(p1);
+    //        myLane.pathPoints.Add(p2);
+    //        //myLane.pathPoints.Add(p3);
+
+    //        myLane.stopLinePoint = p3;
+
+    //        myAILanes.Add(myLane);
+    //    }
+
+    //    // 这里接着写你的拓扑连线逻辑 (双重 foreach 检查距离那个)
+    //    ConnectLanes(myAILanes);
+
+    //    Debug.Log($"成功读取了 {pcgGenerator.lanes.Count} 条 PCG 车道，并已全部展平到 3D 地面！");
+    //}
+
+
     public void BridgeDataAndSpawnCars()
     {
-        // 确保数据已经生成
-        if (pcgGenerator.lanes == null || pcgGenerator.lanes.Count == 0)
-        {
-            Debug.LogError("车道数据为空！");
-            return;
-        }
+        if (pcgGenerator.lanes == null || pcgGenerator.lanes.Count == 0) return;
 
+        List<AgentLaneData> processedLanes = pcgGenerator.GetAgentLanes();
         Transform lanesRoot = new GameObject("AI_Lanes_Root").transform;
         List<LaneData> myAILanes = new List<LaneData>();
 
-        foreach (var pcgLane in pcgGenerator.lanes)
+        foreach (AgentLaneData agentLane in processedLanes)
         {
-            // 1. 创建 AI 车道实体
-            GameObject laneObj = new GameObject("AutoLane");
+            GameObject laneObj = new GameObject("AutoLane_" + agentLane.id);
             laneObj.transform.SetParent(lanesRoot);
             LaneData myLane = laneObj.AddComponent<LaneData>();
 
             Transform p1 = new GameObject("P_Start").transform;
             Transform p2 = new GameObject("P_End").transform;
+            Transform p3 = new GameObject("P_Stop").transform;
+
             p1.SetParent(laneObj.transform);
             p2.SetParent(laneObj.transform);
+            p3.SetParent(laneObj.transform);
 
             // ==========================================
-            // 🚨 看这里！根据你的截图，直接精准读取 Start 和 End
-            Vector2 rawStart = pcgLane.start;
-            Vector2 rawEnd = pcgLane.end;
-
-            // 强制平躺转换：把队友二维的 Y 轴数据，塞进 Unity 三维的 Z 轴里
-            Vector3 unityStart = new Vector3(rawStart.x, 0f, rawStart.y);
-            Vector3 unityEnd = new Vector3(rawEnd.x, 0f, rawEnd.y);
+            // 🎯 核心提取：直接各取所需！
             // ==========================================
 
-            p1.position = unityStart;
-            p2.position = unityEnd;
+            // 1. 汽车出生点：使用带偏移的 VehicleStart
+            p1.position = agentLane.vehicleStartPoint;
 
+            // 2. 马路几何终点：使用一直延伸到路口中心的 EndPoint
+            p2.position = agentLane.endPoint;
+
+            // 3. 红绿灯刹车点：使用队友专门提供的 VehicleStopPoint
+            p3.position = agentLane.vehicleStopPoint;
+
+            // ==========================================
+
+            // 加入寻路路点（车子平时沿着 P1 开向 P2）
             myLane.pathPoints.Add(p1);
             myLane.pathPoints.Add(p2);
+
+            // 专门指定红绿灯刹车点
+            myLane.stopLinePoint = p3;
 
             myAILanes.Add(myLane);
         }
 
-        // 这里接着写你的拓扑连线逻辑 (双重 foreach 检查距离那个)
         ConnectLanes(myAILanes);
-
-        Debug.Log($"成功读取了 {pcgGenerator.lanes.Count} 条 PCG 车道，并已全部展平到 3D 地面！");
+        GenerateTrafficLights(processedLanes);
     }
 
+
+    public void GenerateTrafficLights(List<AgentLaneData> pcgLanes)
+    {
+        // 1. 我们不再用精确的字符串字典，而是用两个列表来记录“聚类堆”
+        List<Vector3> clusterCenters = new List<Vector3>();
+        List<int> clusterCounts = new List<int>();
+
+        // 💡 聚类半径：只要端点距离在 20 米以内，就算同一个路口
+        float clusterRadius = 20f;
+
+        foreach (var lane in pcgLanes)
+        {
+            Vector3 endPos = lane.endPoint;
+            bool foundCluster = false;
+
+            // 遍历目前已知的“路口中心堆”
+            for (int i = 0; i < clusterCenters.Count; i++)
+            {
+                if (Vector3.Distance(endPos, clusterCenters[i]) < clusterRadius)
+                {
+                    clusterCounts[i]++;
+                    // 核心魔法：不断更新这个堆的几何平均中心。
+                    // 这样即使四个点散落在四周，平均下来也刚好是绝对的十字路口中心！
+                    clusterCenters[i] = (clusterCenters[i] * (clusterCounts[i] - 1) + endPos) / clusterCounts[i];
+                    foundCluster = true;
+                    break;
+                }
+            }
+
+            // 如果方圆 20 米内没有现成的堆，就自己作为新路口的火种
+            if (!foundCluster)
+            {
+                clusterCenters.Add(endPos);
+                clusterCounts.Add(1);
+            }
+        }
+
+        // 2. 开始生成红绿灯实体
+        Transform trafficLightsRoot = new GameObject("Traffic_Lights_Root").transform;
+        int lightCount = 0;
+
+        for (int i = 0; i < clusterCenters.Count; i++)
+        {
+            // 3. 只有汇聚了 3 条及以上车道的地方，才是真路口
+            if (clusterCounts[i] >= 3)
+            {
+                GameObject intersectionObj = new GameObject($"Intersection_{lightCount}");
+                // 完美！这个算出来的平均中心，绝对位于四条马路的正中央
+                intersectionObj.transform.position = clusterCenters[i];
+                intersectionObj.transform.SetParent(trafficLightsRoot);
+
+                IntersectionController controller = intersectionObj.AddComponent<IntersectionController>();
+
+                // 因为此时 controller 的坐标已经在路口中心了，
+                // 所以它去探测 12 米内的端点，绝对能把刚才那 4 条车道抓回来！
+                controller.AutoDetectIncomingLanes();
+
+                lightCount++;
+            }
+        }
+
+        Debug.Log($"🚥 聚类雷达扫描完毕！成功自动生成了 {lightCount} 个红绿灯！");
+    }
 
     public TrafficGraph BuildSplitRoad()
     {
