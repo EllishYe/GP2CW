@@ -208,6 +208,67 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &215017937
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 215017939}
+  - component: {fileID: 215017938}
+  m_Layer: 0
+  m_Name: LotTestGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &215017938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 215017937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efeffb28f1aee0640a08fcd4abd0fd39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LotTestGenerator
+  generateBuildingTestVolumes: 1
+  generateParkTestVolumes: 1
+  buildingObjectPrefix: LotTest_Building
+  parkObjectPrefix: LotTest_Park
+  buildingInsetDistance: 3
+  buildingBaseHeight: 0.02
+  buildingHeight: 18
+  parkBaseHeight: 0.02
+  parkHeight: 0.12
+  buildingMaterial: {fileID: 2100000, guid: 65d43613dcaa2204f911717149d742d7, type: 2}
+  parkMaterial: {fileID: 2100000, guid: 3f673d2d57b033342a8d3596890e9e41, type: 2}
+  fallbackBuildingColor: {r: 0.72, g: 0.72, b: 0.76, a: 1}
+  fallbackParkColor: {r: 0.38, g: 0.72, b: 0.32, a: 1}
+  addMeshCollider: 1
+  buildingLayerName: Building
+  parkLayerName: Walkable
+  generatedObjects: []
+--- !u!4 &215017939
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 215017937}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &333206342
 GameObject:
   m_ObjectHideFlags: 0
@@ -845,6 +906,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlockAreaGenerator
   generateBlockMeshes: 1
+  blockSetbackDistance: 4
   blockMeshHeight: 0.015
   minBlockArea: 25
   excludeMapEdgeBlocks: 1
@@ -852,12 +914,13 @@ MonoBehaviour:
   parkMinArea: 12000
   parkMinVertexCount: 10
   randomSeed: 12345
-  buildingBlockMaterial: {fileID: 0}
-  parkBlockMaterial: {fileID: 0}
+  buildingBlockMaterial: {fileID: 2100000, guid: 65d43613dcaa2204f911717149d742d7, type: 2}
+  parkBlockMaterial: {fileID: 2100000, guid: 3f673d2d57b033342a8d3596890e9e41, type: 2}
   addBlockMeshCollider: 1
   buildingBlockLayerName: 
   parkBlockLayerName: Walkable
-  blockGenerationProfile: {fileID: 0}
+  blockGenerationProfile: {fileID: 11400000, guid: d17eab29c6837f34b9ef534a6b461531, type: 2}
+  generatedBlockRoot: {fileID: 849471957}
   blocks: []
 --- !u!4 &2007563328
 Transform:
@@ -884,6 +947,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2126160878}
   - component: {fileID: 2126160877}
+  - component: {fileID: 2126160879}
   m_Layer: 0
   m_Name: CityGenerationController
   m_TagString: Untagged
@@ -907,6 +971,7 @@ MonoBehaviour:
   walkableAreaGenerator: {fileID: 1673490178}
   crosswalkGenerator: {fileID: 178551622}
   blockAreaGenerator: {fileID: 2007563327}
+  lotTestGenerator: {fileID: 2126160879}
   generateRoadsOnStart: 0
   generatedRootName: GeneratedCity
   roadRootName: Road
@@ -934,6 +999,35 @@ Transform:
   - {fileID: 333206343}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2126160879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126160876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efeffb28f1aee0640a08fcd4abd0fd39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LotTestGenerator
+  generateBuildingTestVolumes: 1
+  generateParkTestVolumes: 1
+  buildingObjectPrefix: LotTest_Building
+  parkObjectPrefix: LotTest_Park
+  buildingInsetDistance: 3
+  buildingBaseHeight: 0.02
+  buildingHeight: 18
+  parkBaseHeight: 0.02
+  parkHeight: 0.12
+  buildingMaterial: {fileID: 0}
+  parkMaterial: {fileID: 0}
+  fallbackBuildingColor: {r: 0.72, g: 0.72, b: 0.76, a: 1}
+  fallbackParkColor: {r: 0.38, g: 0.72, b: 0.32, a: 1}
+  addMeshCollider: 1
+  buildingLayerName: Building
+  parkLayerName: Walkable
+  generatedObjects: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -946,3 +1040,4 @@ SceneRoots:
   - {fileID: 178551623}
   - {fileID: 2007563328}
   - {fileID: 2126160878}
+  - {fileID: 215017939}

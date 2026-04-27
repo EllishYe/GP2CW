@@ -20,6 +20,13 @@ public class CityGenerationControllerEditor : Editor
             EditorUtility.SetDirty(controller);
         }
 
+        if (GUILayout.Button("Refresh Lot Test Reference"))
+        {
+            Undo.RecordObject(controller, "Refresh Lot Test Reference");
+            controller.RefreshLotTestGeneratorReference();
+            EditorUtility.SetDirty(controller);
+        }
+
         if (GUILayout.Button("Ensure Generated Hierarchy"))
         {
             Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Ensure Generated Hierarchy");

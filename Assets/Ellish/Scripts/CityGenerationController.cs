@@ -7,6 +7,7 @@ public class CityGenerationController : MonoBehaviour
     public WalkableAreaGenerator walkableAreaGenerator;
     public CrosswalkGenerator crosswalkGenerator;
     public BlockAreaGenerator blockAreaGenerator;
+    public LotTestGenerator lotTestGenerator;
 
     [Header("Runtime")]
     public bool generateRoadsOnStart = false;
@@ -51,6 +52,24 @@ public class CityGenerationController : MonoBehaviour
             crosswalkGenerator = GetComponentInChildren<CrosswalkGenerator>();
         if (blockAreaGenerator == null)
             blockAreaGenerator = GetComponentInChildren<BlockAreaGenerator>();
+        if (lotTestGenerator == null)
+            lotTestGenerator = GetComponentInChildren<LotTestGenerator>();
+        if (lotTestGenerator == null)
+            lotTestGenerator = FindExistingLotTestGeneratorInScene();
+    }
+
+    public void RefreshLotTestGeneratorReference()
+    {
+        LotTestGenerator configuredLotTestGenerator = FindConfiguredLotTestGeneratorInScene();
+        if (configuredLotTestGenerator != null)
+        {
+            lotTestGenerator = configuredLotTestGenerator;
+            return;
+        }
+
+        lotTestGenerator = GetComponentInChildren<LotTestGenerator>();
+        if (lotTestGenerator == null)
+            lotTestGenerator = FindExistingLotTestGeneratorInScene();
     }
 
     public void EnsureGeneratedHierarchy()
@@ -153,12 +172,28 @@ public class CityGenerationController : MonoBehaviour
     public void GenerateLots()
     {
         EnsureGeneratedHierarchy();
-        Debug.LogWarning("CityGenerationController: Lot generation is not implemented yet.");
+        FindStageGenerators();
+
+        if (lotTestGenerator == null)
+        {
+            lotTestGenerator = gameObject.AddComponent<LotTestGenerator>();
+            Debug.LogWarning("CityGenerationController: Auto-created a LotTestGenerator because no existing one was assigned/found. Assign materials on this generated component before expecting custom materials.");
+        }
+
+        if (blockAreaGenerator == null || blockAreaGenerator.blocks == null || blockAreaGenerator.blocks.Count == 0)
+        {
+            Debug.LogWarning("CityGenerationController: Generate blocks before generating lot test volumes.");
+            return;
+        }
+
+        lotTestGenerator.Generate(blockAreaGenerator, lotRoot);
     }
 
     public void ClearLots()
     {
         EnsureGeneratedHierarchy();
+        if (lotTestGenerator != null)
+            lotTestGenerator.Clear(lotRoot);
         ClearChildren(lotRoot);
     }
 
@@ -201,6 +236,32 @@ public class CityGenerationController : MonoBehaviour
             else
                 DestroyImmediate(child.gameObject);
         }
+    }
+
+    private static LotTestGenerator FindExistingLotTestGeneratorInScene()
+    {
+#if UNITY_2023_1_OR_NEWER
+        return Object.FindFirstObjectByType<LotTestGenerator>(FindObjectsInactive.Include);
+#else
+        return Object.FindObjectOfType<LotTestGenerator>(true);
+#endif
+    }
+
+    private static LotTestGenerator FindConfiguredLotTestGeneratorInScene()
+    {
+#if UNITY_2023_1_OR_NEWER
+        LotTestGenerator[] generators = Object.FindObjectsByType<LotTestGenerator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#else
+        LotTestGenerator[] generators = Object.FindObjectsOfType<LotTestGenerator>(true);
+#endif
+        for (int i = 0; i < generators.Length; i++)
+        {
+            LotTestGenerator generator = generators[i];
+            if (generator != null && (generator.buildingMaterial != null || generator.parkMaterial != null))
+                return generator;
+        }
+
+        return null;
     }
 
 }
