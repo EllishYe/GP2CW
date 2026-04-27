@@ -6,6 +6,7 @@ public class BlockDebugComponent : MonoBehaviour
     public int blockId;
     public string stableKey;
     public BlockLandUse landUse;
+    public UrbanBlockType urbanBlockType = UrbanBlockType.Default;
     public BlockLandUseOverride landUseOverride = BlockLandUseOverride.Auto;
     public double area;
     public Vector3 center;

@@ -7,6 +7,8 @@ public class CityGenerationController : MonoBehaviour
     public WalkableAreaGenerator walkableAreaGenerator;
     public CrosswalkGenerator crosswalkGenerator;
     public BlockAreaGenerator blockAreaGenerator;
+    public LotAreaGenerator lotAreaGenerator;
+    public LotBuildingGenerator lotBuildingGenerator;
     public LotTestGenerator lotTestGenerator;
 
     [Header("Runtime")]
@@ -52,6 +54,10 @@ public class CityGenerationController : MonoBehaviour
             crosswalkGenerator = GetComponentInChildren<CrosswalkGenerator>();
         if (blockAreaGenerator == null)
             blockAreaGenerator = GetComponentInChildren<BlockAreaGenerator>();
+        if (lotAreaGenerator == null)
+            lotAreaGenerator = GetComponentInChildren<LotAreaGenerator>();
+        if (lotBuildingGenerator == null)
+            lotBuildingGenerator = GetComponentInChildren<LotBuildingGenerator>();
         if (lotTestGenerator == null)
             lotTestGenerator = GetComponentInChildren<LotTestGenerator>();
         if (lotTestGenerator == null)
@@ -174,24 +180,30 @@ public class CityGenerationController : MonoBehaviour
         EnsureGeneratedHierarchy();
         FindStageGenerators();
 
-        if (lotTestGenerator == null)
-        {
-            lotTestGenerator = gameObject.AddComponent<LotTestGenerator>();
-            Debug.LogWarning("CityGenerationController: Auto-created a LotTestGenerator because no existing one was assigned/found. Assign materials on this generated component before expecting custom materials.");
-        }
+        if (lotAreaGenerator == null)
+            lotAreaGenerator = gameObject.AddComponent<LotAreaGenerator>();
 
         if (blockAreaGenerator == null || blockAreaGenerator.blocks == null || blockAreaGenerator.blocks.Count == 0)
         {
-            Debug.LogWarning("CityGenerationController: Generate blocks before generating lot test volumes.");
+            Debug.LogWarning("CityGenerationController: Generate blocks before generating lots.");
             return;
         }
 
-        lotTestGenerator.Generate(blockAreaGenerator, lotRoot);
+        lotAreaGenerator.Generate(blockAreaGenerator, roadNetworkGenerator);
+
+        if (lotBuildingGenerator == null)
+            lotBuildingGenerator = gameObject.AddComponent<LotBuildingGenerator>();
+
+        lotBuildingGenerator.Generate(lotAreaGenerator, lotRoot);
     }
 
     public void ClearLots()
     {
         EnsureGeneratedHierarchy();
+        if (lotAreaGenerator != null)
+            lotAreaGenerator.Clear();
+        if (lotBuildingGenerator != null)
+            lotBuildingGenerator.Clear(lotRoot);
         if (lotTestGenerator != null)
             lotTestGenerator.Clear(lotRoot);
         ClearChildren(lotRoot);

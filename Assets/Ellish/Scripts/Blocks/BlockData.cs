@@ -20,6 +20,7 @@ public class BlockData
     public int id;
     public string stableKey;
     public BlockLandUse landUse;
+    public UrbanBlockType urbanBlockType = UrbanBlockType.Default;
     public Path64 polygon;
     public double area;
     public Vector2 planarCenter;

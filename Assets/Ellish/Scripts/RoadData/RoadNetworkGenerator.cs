@@ -9,6 +9,9 @@ using UnityEngine;
 
 public class RoadNetworkGenerator : MonoBehaviour
 {
+    [Header("Profile")]
+    public RoadNetworkProfile profile;
+
     [Header("Runtime")]
     public bool generateOnStart = true;
 
@@ -68,6 +71,33 @@ public class RoadNetworkGenerator : MonoBehaviour
 
     void OnValidate()
     {
+        SanitizeSettings();
+    }
+
+    public void ApplyProfile()
+    {
+        if (profile == null)
+        {
+            Debug.LogWarning("RoadNetworkGenerator: No RoadNetworkProfile is assigned.");
+            return;
+        }
+
+        profile.ApplyTo(this);
+    }
+
+    public void CaptureCurrentSettingsToProfile()
+    {
+        if (profile == null)
+        {
+            Debug.LogWarning("RoadNetworkGenerator: No RoadNetworkProfile is assigned.");
+            return;
+        }
+
+        profile.CaptureFrom(this);
+    }
+
+    public void SanitizeSettings()
+    {
         mapSize = Mathf.Max(1, mapSize);
         roadSegmentLength = Mathf.Max(1f, roadSegmentLength);
         laneWidth = Mathf.Max(0.1f, laneWidth);
@@ -91,7 +121,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         ClearGeneratedObjects();
         graph = new Graph();
 
-        System.Random rand = new System.Random(randomSeed); // 固定种子（方便调试）
+        System.Random rand = new System.Random(randomSeed); // Fixed seed for repeatable generation.
 
         // Generate major roads 
         MajorGenerator majorGen = new MajorGenerator(
@@ -141,7 +171,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         polylines = CombinePolylines(majorPolylines, minorPolylines);
 
         //Generate road footprints
-        //roadPolygons = RoadFootprintGenerator.Generate(graph, 2f);//??ε????
+        //roadPolygons = RoadFootprintGenerator.Generate(graph, 2f);
         footprint = RoadFootprintGenerator.GenerateByRoadType(majorPolylines, majorRoadWidth, minorPolylines, minorRoadWidth);
         if (generateRoadMesh)
             BuildRoadMeshObject();
@@ -256,8 +286,7 @@ public class RoadNetworkGenerator : MonoBehaviour
         for (int i = 0; i < target.transform.childCount; i++)
             SetLayerRecursively(target.transform.GetChild(i).gameObject, layer);
     }
-
-    // 对外只读暴露用于调试/可视化
+    // Exposed for debugging and visualization.
     public Paths64 Polylines => polylines;
     public Paths64 MajorPolylines => majorPolylines;
     public Paths64 MinorPolylines => minorPolylines;

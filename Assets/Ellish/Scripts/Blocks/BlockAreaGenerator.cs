@@ -14,8 +14,12 @@ public class BlockAreaGenerator : MonoBehaviour
     public bool excludeMapEdgeBlocks = true;
 
     [Header("Park Classification")]
-    [Range(0f, 1f)] public float parkProbability = 0.12f;
+    [Range(0f, 1f)] public float parkProbability = 0.08f;
+    [Range(0f, 1f)] public float parkIrregularityThreshold = 0.62f;
+    [Range(0f, 1f)] public float parkLowFillRatioThreshold = 0.72f;
+    public float parkAspectRatioThreshold = 3.5f;
     public float parkMinArea = 12000f;
+    public float parkMaxRegularArea = 22000f;
     public int parkMinVertexCount = 10;
     public int randomSeed = 12345;
 
@@ -41,6 +45,8 @@ public class BlockAreaGenerator : MonoBehaviour
         blockSetbackDistance = Mathf.Max(0f, blockSetbackDistance);
         minBlockArea = Mathf.Max(0f, minBlockArea);
         parkMinArea = Mathf.Max(0f, parkMinArea);
+        parkMaxRegularArea = Mathf.Max(parkMinArea, parkMaxRegularArea);
+        parkAspectRatioThreshold = Mathf.Max(1f, parkAspectRatioThreshold);
         parkMinVertexCount = Mathf.Max(3, parkMinVertexCount);
     }
 
@@ -220,6 +226,7 @@ public class BlockAreaGenerator : MonoBehaviour
                 id = blocks.Count,
                 stableKey = stableKey,
                 landUse = landUse,
+                urbanBlockType = landUse == BlockLandUse.Park ? UrbanBlockType.Park : UrbanBlockType.Default,
                 polygon = polygon,
                 area = area,
                 planarCenter = center,
@@ -233,16 +240,39 @@ public class BlockAreaGenerator : MonoBehaviour
         if (blockGenerationProfile != null && blockGenerationProfile.TryGetOverride(stableKey, out BlockLandUse savedLandUse))
             return savedLandUse;
 
-        if (polygon.Count >= parkMinVertexCount)
-            return BlockLandUse.Park;
-
-        if (area >= parkMinArea)
-            return BlockLandUse.Park;
-
-        if (random.NextDouble() < parkProbability)
+        float irregularityScore = CalculateParkIrregularityScore(polygon, area);
+        float randomBonus = (float)random.NextDouble() * parkProbability;
+        if (irregularityScore + randomBonus >= parkIrregularityThreshold)
             return BlockLandUse.Park;
 
         return BlockLandUse.Building;
+    }
+
+    private float CalculateParkIrregularityScore(Path64 polygon, double area)
+    {
+        OrientedBounds2D bounds = CalculateOrientedBounds(polygon);
+        if (!bounds.IsValid || bounds.Width <= 0.01f || bounds.Height <= 0.01f)
+            return 1f;
+
+        float boundsArea = bounds.Width * bounds.Height;
+        float fillRatio = boundsArea <= 0.01f ? 0f : Mathf.Clamp01((float)area / boundsArea);
+        float lowFillScore = Mathf.InverseLerp(1f, parkLowFillRatioThreshold, fillRatio);
+
+        float aspectRatio = Mathf.Max(bounds.Width, bounds.Height) / Mathf.Max(0.01f, Mathf.Min(bounds.Width, bounds.Height));
+        float aspectScore = Mathf.InverseLerp(1f, parkAspectRatioThreshold, aspectRatio);
+
+        float vertexScore = Mathf.InverseLerp(4f, parkMinVertexCount, polygon.Count);
+
+        float largeAreaScore = 0f;
+        if (area >= parkMinArea)
+            largeAreaScore = Mathf.InverseLerp((float)parkMinArea, (float)parkMaxRegularArea, (float)area);
+
+        return Mathf.Clamp01(
+            lowFillScore * 0.4f +
+            aspectScore * 0.25f +
+            vertexScore * 0.25f +
+            largeAreaScore * 0.1f
+        );
     }
 
     private void CreateBlockObject(BlockData block, Transform parent)
@@ -277,6 +307,7 @@ public class BlockAreaGenerator : MonoBehaviour
         debug.blockId = block.id;
         debug.stableKey = block.stableKey;
         debug.landUse = block.landUse;
+        debug.urbanBlockType = block.urbanBlockType;
         debug.area = block.area;
         debug.center = block.center;
 
@@ -431,6 +462,69 @@ public class BlockAreaGenerator : MonoBehaviour
         return $"{roundedX}_{roundedY}_{roundedArea}";
     }
 
+    private static OrientedBounds2D CalculateOrientedBounds(Path64 polygon)
+    {
+        OrientedBounds2D bestBounds = new OrientedBounds2D();
+        if (polygon == null || polygon.Count == 0)
+            return bestBounds;
+
+        float bestArea = float.MaxValue;
+
+        for (int i = 0; i < polygon.Count; i++)
+        {
+            Vector2 current = ToVector2(polygon[i]);
+            Vector2 next = ToVector2(polygon[(i + 1) % polygon.Count]);
+            Vector2 primaryAxis = next - current;
+            if (primaryAxis.sqrMagnitude <= 0.0001f)
+                continue;
+
+            primaryAxis.Normalize();
+            Vector2 secondaryAxis = new Vector2(-primaryAxis.y, primaryAxis.x);
+            OrientedBounds2D candidate = CalculateOrientedBoundsForAxis(polygon, primaryAxis, secondaryAxis);
+            if (!candidate.IsValid)
+                continue;
+
+            float area = candidate.Width * candidate.Height;
+            if (area < bestArea)
+            {
+                bestArea = area;
+                bestBounds = candidate;
+            }
+        }
+
+        return bestBounds;
+    }
+
+    private static OrientedBounds2D CalculateOrientedBoundsForAxis(Path64 polygon, Vector2 primaryAxis, Vector2 secondaryAxis)
+    {
+        OrientedBounds2D bounds = new OrientedBounds2D
+        {
+            IsValid = true
+        };
+
+        Vector2 firstPoint = ToVector2(polygon[0]);
+        bounds.MinPrimary = bounds.MaxPrimary = Vector2.Dot(firstPoint, primaryAxis);
+        bounds.MinSecondary = bounds.MaxSecondary = Vector2.Dot(firstPoint, secondaryAxis);
+
+        for (int i = 1; i < polygon.Count; i++)
+        {
+            Vector2 point = ToVector2(polygon[i]);
+            float primary = Vector2.Dot(point, primaryAxis);
+            float secondary = Vector2.Dot(point, secondaryAxis);
+            bounds.MinPrimary = Mathf.Min(bounds.MinPrimary, primary);
+            bounds.MaxPrimary = Mathf.Max(bounds.MaxPrimary, primary);
+            bounds.MinSecondary = Mathf.Min(bounds.MinSecondary, secondary);
+            bounds.MaxSecondary = Mathf.Max(bounds.MaxSecondary, secondary);
+        }
+
+        return bounds;
+    }
+
+    private static Vector2 ToVector2(Point64 point)
+    {
+        return new Vector2(point.X / ClipperScale, point.Y / ClipperScale);
+    }
+
     private static void AssignLayerIfExists(GameObject target, string layerName)
     {
         if (target == null || string.IsNullOrWhiteSpace(layerName)) return;
@@ -443,5 +537,16 @@ public class BlockAreaGenerator : MonoBehaviour
         }
 
         target.layer = layer;
+    }
+
+    private struct OrientedBounds2D
+    {
+        public bool IsValid;
+        public float MinPrimary;
+        public float MaxPrimary;
+        public float MinSecondary;
+        public float MaxSecondary;
+        public float Width => MaxPrimary - MinPrimary;
+        public float Height => MaxSecondary - MinSecondary;
     }
 }

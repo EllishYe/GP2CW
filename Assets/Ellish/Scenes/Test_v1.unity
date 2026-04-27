@@ -224,7 +224,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &215017938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -395,14 +395,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 139b10ffad462ce4fbc2968ede9b59f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoadNetworkGenerator
+  profile: {fileID: 0}
   generateOnStart: 0
-  mapSize: 1000
+  mapSize: 500
   randomSeed: 12345
-  roadSegmentLength: 100
+  roadSegmentLength: 75
   majorRoadCount: 200
   maxLeanAngle: 20
   branchProbability: 0.1
-  minorRoadCount: 400
+  minorRoadCount: 800
   deletionProbability: 0.2
   laneWidth: 3.5
   majorLanesPerDirection: 2
@@ -910,8 +911,12 @@ MonoBehaviour:
   blockMeshHeight: 0.015
   minBlockArea: 25
   excludeMapEdgeBlocks: 1
-  parkProbability: 0.12
+  parkProbability: 0
+  parkIrregularityThreshold: 0.1
+  parkLowFillRatioThreshold: 1
+  parkAspectRatioThreshold: 1
   parkMinArea: 12000
+  parkMaxRegularArea: 22000
   parkMinVertexCount: 10
   randomSeed: 12345
   buildingBlockMaterial: {fileID: 2100000, guid: 65d43613dcaa2204f911717149d742d7, type: 2}
@@ -937,6 +942,110 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2070636846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2070636848}
+  - component: {fileID: 2070636847}
+  m_Layer: 0
+  m_Name: LotAreaGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2070636847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070636846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20302c00131fefb4fa33af53627b00e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LotAreaGenerator
+  assignmentMode: 0
+  defaultBuildingType: 1
+  randomSeed: 12345
+  residentialWeight: 0.45
+  commercialWeight: 0.25
+  industrialWeight: 0.3
+  commercialInnerNormalizedRadius: 0.25
+  residentialMiddleNormalizedRadius: 0.65
+  enableSubdivision: 1
+  minCutRatio: 0.35
+  maxCutRatio: 0.65
+  applyCenterHeightFalloff: 1
+  edgeHeightMultiplier: 0.45
+  typeProfiles:
+  - type: 0
+    maxSubdivisionDepth: 4
+    minLotArea: 600
+    maxAspectRatio: 4
+    buildingSetback: 0
+    minHeight: 8
+    maxHeight: 24
+    blockMaterial: {fileID: 0}
+    buildingMaterial: {fileID: 0}
+  - type: 1
+    maxSubdivisionDepth: 4
+    minLotArea: 650
+    maxAspectRatio: 4
+    buildingSetback: 0
+    minHeight: 12
+    maxHeight: 24
+    blockMaterial: {fileID: 0}
+    buildingMaterial: {fileID: 0}
+  - type: 2
+    maxSubdivisionDepth: 5
+    minLotArea: 350
+    maxAspectRatio: 5
+    buildingSetback: 1.5
+    minHeight: 20
+    maxHeight: 80
+    blockMaterial: {fileID: 0}
+    buildingMaterial: {fileID: 0}
+  - type: 3
+    maxSubdivisionDepth: 2
+    minLotArea: 1800
+    maxAspectRatio: 4.5
+    buildingSetback: 2
+    minHeight: 5
+    maxHeight: 14
+    blockMaterial: {fileID: 0}
+    buildingMaterial: {fileID: 0}
+  - type: 4
+    maxSubdivisionDepth: 0
+    minLotArea: 1000
+    maxAspectRatio: 8
+    buildingSetback: 0
+    minHeight: 0.02
+    maxHeight: 0.2
+    blockMaterial: {fileID: 0}
+    buildingMaterial: {fileID: 0}
+  lots: []
+--- !u!4 &2070636848
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2070636846}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2126160876
 GameObject:
   m_ObjectHideFlags: 0
@@ -948,6 +1057,7 @@ GameObject:
   - component: {fileID: 2126160878}
   - component: {fileID: 2126160877}
   - component: {fileID: 2126160879}
+  - component: {fileID: 2126160880}
   m_Layer: 0
   m_Name: CityGenerationController
   m_TagString: Untagged
@@ -971,6 +1081,8 @@ MonoBehaviour:
   walkableAreaGenerator: {fileID: 1673490178}
   crosswalkGenerator: {fileID: 178551622}
   blockAreaGenerator: {fileID: 2007563327}
+  lotAreaGenerator: {fileID: 2070636847}
+  lotBuildingGenerator: {fileID: 2126160880}
   lotTestGenerator: {fileID: 2126160879}
   generateRoadsOnStart: 0
   generatedRootName: GeneratedCity
@@ -1028,6 +1140,28 @@ MonoBehaviour:
   buildingLayerName: Building
   parkLayerName: Walkable
   generatedObjects: []
+--- !u!114 &2126160880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2126160876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61ce7697f0740ec47b4bc3292343dc55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LotBuildingGenerator
+  generateBuildings: 1
+  buildingBaseHeight: 0.02
+  buildingObjectPrefix: Building
+  defaultBuildingColor: {r: 0.72, g: 0.72, b: 0.76, a: 1}
+  residentialColor: {r: 0.78, g: 0.7, b: 0.62, a: 1}
+  commercialColor: {r: 0.42, g: 0.54, b: 0.68, a: 1}
+  industrialColor: {r: 0.56, g: 0.56, b: 0.52, a: 1}
+  addBuildingMeshCollider: 1
+  buildingLayerName: Building
+  generatedBuildings: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1041,3 +1175,4 @@ SceneRoots:
   - {fileID: 2007563328}
   - {fileID: 2126160878}
   - {fileID: 215017939}
+  - {fileID: 2070636848}
