@@ -3,13 +3,12 @@ using UnityEngine;
 
 public class VehicleAgent : MonoBehaviour
 {
-
     public enum CarState
     {
         Driving,        
         Braking,        
-        WaitingAtLight, // 等红绿灯 (预留)
-        Yielding        // 避让行人 (预留)
+        WaitingAtLight, 
+        Yielding        
     }
 
     [Header("状态")]
@@ -46,7 +45,6 @@ public class VehicleAgent : MonoBehaviour
         {
             Vector3 startPos = currentLane.pathPoints[0].position;
 
-            // 把汽车瞬间传送到起点，但保持汽车现有的高度 (Y轴)
             transform.position = new Vector3(startPos.x, transform.position.y, startPos.z);
             //transform.position = currentLane.pathPoints[0].position;
             currentPointIndex = 1;
@@ -70,13 +68,13 @@ public class VehicleAgent : MonoBehaviour
             case CarState.Braking:
             case CarState.WaitingAtLight:
             case CarState.Yielding:
-                currentSpeed = Mathf.Lerp(currentSpeed, 0, Time.fixedDeltaTime * 10f); // 强力刹车
+                currentSpeed = Mathf.Lerp(currentSpeed, 0, Time.fixedDeltaTime * 10f); // quikly braking
 
                 if (currentSpeed < 2f)
                 {
                     currentSpeed = 0f;
                 }
-                DriveAlongLane(); // 即使刹车，也需要沿着轨迹慢慢停下
+                DriveAlongLane(); 
                 break;
         }
     }
@@ -86,7 +84,6 @@ public class VehicleAgent : MonoBehaviour
         bool isPathClear = true;
         Vector3 sensorStartPos = transform.TransformPoint(sensorOffset);
 
-        // 向前发射隐形的射线
         float castRadius = 1.5f;
         RaycastHit hit;
 
@@ -102,50 +99,43 @@ public class VehicleAgent : MonoBehaviour
             else if (hit.collider.CompareTag("Pedestrian"))
             {
                 isPathClear = false;
-                currentState = CarState.Yielding; // 切入避让状态
-                Debug.DrawRay(sensorStartPos, transform.forward * hit.distance, Color.yellow); // 画黄线警示
+                currentState = CarState.Yielding;
+                Debug.DrawRay(sensorStartPos, transform.forward * hit.distance, Color.yellow); 
             }
         }
 
         if (isPathClear)
         {
-            // 前方畅通，平滑加速到最高限速
+
             Debug.DrawRay(sensorStartPos, transform.forward * sensorLength, Color.green);
 
             if (currentState == CarState.Braking || currentState == CarState.Yielding)
             {
-                currentState = CarState.Driving; // 只有在跟车或避让结束后，才允许重新踩油门
+                currentState = CarState.Driving; 
             }
         }
     }
 
-
-    // 🚨 新增：司机的红绿灯视觉系统
     private void CheckTrafficLight()
     {
-        // 1. 只有当车子正开向这条路的【最后一个路点】时（说明马上要进十字路口了），才需要看灯
+
         if (currentPointIndex == currentLane.pathPoints.Count - 1)
         {
-            // 2. 抬头看一眼，这根车道现在是红灯吗？
             if (currentLane.isRedLight)
             {
-                // 3. 算出车头离停止线（最后一个路点）还有多远
                 Vector3 stopPos = currentLane.pathPoints[currentPointIndex].position;
                 float distanceToStopLine = Vector3.Distance(transform.position, stopPos);
 
-                // 4. 如果距离停止线不到 3 米了，立刻踩刹车进入等灯状态！
+                //breaking distance in front of intersection
                 if (distanceToStopLine < 8f)
                 {
                     currentState = CarState.WaitingAtLight;
-                    return; // 结束判断
+                    return; 
                 }
             }
         }
-
-        // 5. 状态恢复：如果车子正在等红灯，但路口的交警把灯切回绿灯了 (isRedLight == false)
         if (currentState == CarState.WaitingAtLight && !currentLane.isRedLight)
         {
-            // 挂挡，重新起步！
             currentState = CarState.Driving;
         }
     }

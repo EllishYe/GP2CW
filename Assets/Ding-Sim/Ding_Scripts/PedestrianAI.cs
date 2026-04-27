@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(Animator))]
@@ -8,19 +9,10 @@ public class PedestrianAI : MonoBehaviour
     private NavMeshAgent agent;
     private Animator animator;
 
-    private bool _isGoingHome = false; // 当前状态
+    private bool _isGoingHome = false;
     private Vector3 _myHomePos;
 
-    [Header("真实通勤设置")]
-    public float minWaitTime = 1f;   // 等红绿灯/发呆的最短时间
-    public float maxWaitTime = 4f;   // 发呆的最长时间
-    public float maxTravelDistance = 50f; // 限制单次出行的最远距离，避免跨越全城走断腿
-
-    private float waitTimer;
-    private bool isWaiting = false;
-
-    // all POI
-    private static Transform[] allCityPOIs;
+    private static Transform[] allOfficePOIs;
     private Transform currentDestination;
 
     void Start()
@@ -28,97 +20,92 @@ public class PedestrianAI : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
 
-        // 1. 性能优化：全城小人共享一份 POI 名单，不需要每个人都去搜一遍
-        if (allCityPOIs == null || allCityPOIs.Length == 0)
+        if (allOfficePOIs == null || allOfficePOIs.Length == 0)
         {
-            GameObject[] poiObjects = GameObject.FindGameObjectsWithTag("PedestrianPOI");
-            allCityPOIs = new Transform[poiObjects.Length];
-            for (int i = 0; i < poiObjects.Length; i++)
+            // 获取场景里所有挂了 PedestrianPOI 脚本的物体
+            PedestrianPOI[] poiScripts = Object.FindObjectsByType<PedestrianPOI>(FindObjectsSortMode.None);
+            List<Transform> officeList = new List<Transform>();
+
+            // 遍历并只把 Office 类型的提取出来
+            foreach (var poi in poiScripts)
             {
-                allCityPOIs[i] = poiObjects[i].transform;
+                if (poi.type == PedestrianPOI.POIType.Office) // 确保你的枚举里有 Office 这个选项
+                {
+                    officeList.Add(poi.transform);
+                }
             }
 
-            if (allCityPOIs.Length == 0)
+            allOfficePOIs = officeList.ToArray();
+
+            if (allOfficePOIs.Length == 0)
             {
-                Debug.LogError("🚨 城市里没有行人兴趣点！请在人行道上放置空物体并打上 'PedestrianPOI' 标签！");
+                Debug.LogError("no office POI");
             }
         }
 
-        waitTimer = Random.Range(0f, maxWaitTime);
-        isWaiting = true;
+        SetLogicalDestination();
     }
 
     void Update()
     {
         animator.SetFloat("Speed", agent.velocity.magnitude);
 
-        if (isWaiting)
-        {
-            waitTimer -= Time.deltaTime;
-            if (waitTimer <= 0)
-            {
-                isWaiting = false;
-                SetLogicalDestination(); // 时间到了，出发去下一个目标！
-            }
-        }
-        else
+        if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
         {
             if (agent.hasPath && currentDestination != null)
             {
-                // 用绿线画出它的长途通勤目标
                 Debug.DrawLine(transform.position + Vector3.up, currentDestination.position + Vector3.up, Color.green);
             }
 
-            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) { 
-                if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+
+            if (!_isGoingHome && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
             {
-                isWaiting = true;
-                waitTimer = Random.Range(minWaitTime, maxWaitTime);
-            }
+
             }
         }
     }
 
-
-    public void InitHome(Vector3 homePosition)
-    {
-        _myHomePos = homePosition;
-    }
-
-    // 由 Manager 在晚上 18:00 时调用
-    public void GoHome()
-    {
-        _isGoingHome = true;
-        agent.SetDestination(_myHomePos); // 强行把寻路目标改成家！
-    }
-
-    // 🚨 核心逻辑：找一个符合人类逻辑的目的地
     private void SetLogicalDestination()
     {
-        if (allCityPOIs == null || allCityPOIs.Length == 0) return;
+        if (allOfficePOIs == null || allOfficePOIs.Length == 0) return;
 
         Transform bestTarget = null;
-        int maxAttempts = 10; // 找 10 次，找不到合适的就随便去一个，防止死循环
+        int maxAttempts = 15;
 
         for (int i = 0; i < maxAttempts; i++)
         {
-            // 随机抽一个全城兴趣点
-            Transform randomPOI = allCityPOIs[Random.Range(0, allCityPOIs.Length)];
 
-            // 1. 距离过滤：不能选自己脚下现在的点，也不能选太远的点
+            Transform randomPOI = allOfficePOIs[Random.Range(0, allOfficePOIs.Length)];
             float distance = Vector3.Distance(transform.position, randomPOI.position);
 
-            if (distance > 2f && distance < maxTravelDistance)
+            if (distance > 5f)
             {
                 bestTarget = randomPOI;
                 break;
             }
         }
 
-        // 如果上面没找到合适的，就兜底选第一个
-        if (bestTarget == null) bestTarget = allCityPOIs[Random.Range(0, allCityPOIs.Length)];
+        if (bestTarget == null) bestTarget = allOfficePOIs[Random.Range(0, allOfficePOIs.Length)];
 
         currentDestination = bestTarget;
-        agent.SetDestination(currentDestination.position);
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.SetDestination(currentDestination.position);
+        }
+    }
+
+    public void InitHome(Vector3 homePosition)
+    {
+        _myHomePos = homePosition;
+    }
+
+    // AFTER 18:00p.m.
+    public void GoHome()
+    {
+        _isGoingHome = true;
+        if (agent != null && agent.isOnNavMesh)
+        {
+            agent.SetDestination(_myHomePos);
+        }
     }
 }
