@@ -1,0 +1,197 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 136345ac9009f004dacb63b8937cebb4, type: 3}
+  m_Name: BlockGenerationProfile
+  m_EditorClassIdentifier: Assembly-CSharp::BlockGenerationProfile
+  overrides:
+  - stableKey: 3307_8497_13536
+    landUse: 1
+  - stableKey: 1051_8224_7225
+    landUse: 1
+  - stableKey: 148_7793_7225
+    landUse: 1
+  - stableKey: 2368_7744_6927
+    landUse: 0
+  - stableKey: 1482_7321_7225
+    landUse: 0
+  - stableKey: 3733_7288_6927
+    landUse: 0
+  - stableKey: 2799_6842_6927
+    landUse: 0
+  - stableKey: 5050_6808_7225
+    landUse: 0
+  - stableKey: 1912_6419_7225
+    landUse: 0
+  - stableKey: 4164_6385_6927
+    landUse: 0
+  - stableKey: 3294_4496_66032
+    landUse: 1
+  - stableKey: 5340_5137_38121
+    landUse: 1
+  - stableKey: 7164_4415_26768
+    landUse: 1
+  - stableKey: 6359_3545_9426
+    landUse: 0
+  - stableKey: 5385_3461_7603
+    landUse: 0
+  - stableKey: 8450_3410_7225
+    landUse: 0
+  - stableKey: 2471_2213_10757
+    landUse: 0
+  - stableKey: 3458_2097_12709
+    landUse: 1
+  - stableKey: 4432_2432_6777
+    landUse: 1
+  - stableKey: 5467_2411_7072
+    landUse: 0
+  - stableKey: 6449_2390_7667
+    landUse: 0
+  - stableKey: 4430_1490_6041
+    landUse: 0
+  - stableKey: 5448_1354_7638
+    landUse: 0
+  - stableKey: 6434_1171_10556
+    landUse: 0
+  - stableKey: 2396_1103_5390
+    landUse: 0
+  - stableKey: 3357_836_6117
+    landUse: 1
+  - stableKey: 4302_573_6549
+    landUse: 0
+  - stableKey: 5297_295_7270
+    landUse: 0
+  - stableKey: 1415_-1813_130794
+    landUse: 1
+  - stableKey: 6243_-6_7948
+    landUse: 0
+  - stableKey: 3135_5_5907
+    landUse: 0
+  - stableKey: 4050_-345_6475
+    landUse: 0
+  - stableKey: 5015_-714_7330
+    landUse: 0
+  - stableKey: -965_-671_7225
+    landUse: 0
+  - stableKey: -2445_-1227_34225
+    landUse: 1
+  - stableKey: -6960_-893_7225
+    landUse: 0
+  - stableKey: 5931_-1064_8492
+    landUse: 0
+  - stableKey: -7960_-930_7225
+    landUse: 0
+  - stableKey: -8959_-967_7225
+    landUse: 0
+  - stableKey: 4624_-1726_7785
+    landUse: 0
+  - stableKey: -3925_-1782_7225
+    landUse: 0
+  - stableKey: -6923_-1893_7225
+    landUse: 0
+  - stableKey: -7923_-1930_7225
+    landUse: 0
+  - stableKey: 5462_-2223_10093
+    landUse: 1
+  - stableKey: 6363_-2752_13656
+    landUse: 1
+  - stableKey: 4009_-3492_44069
+    landUse: 1
+  - stableKey: -1890_-2707_7225
+    landUse: 0
+  - stableKey: -2889_-2744_7225
+    landUse: 0
+  - stableKey: 7483_-2840_5694
+    landUse: 0
+  - stableKey: -3888_-2781_7225
+    landUse: 0
+  - stableKey: -6886_-2892_7225
+    landUse: 0
+  - stableKey: 7049_-3650_7225
+    landUse: 0
+  - stableKey: 94_-3547_6140
+    landUse: 0
+  - stableKey: -854_-3652_6927
+    landUse: 0
+  - stableKey: 5768_-3878_6070
+    landUse: 0
+  - stableKey: -1853_-3689_6927
+    landUse: 0
+  - stableKey: -2853_-3726_6927
+    landUse: 0
+  - stableKey: -3852_-3763_6928
+    landUse: 0
+  - stableKey: 2241_-3938_7445
+    landUse: 0
+  - stableKey: -4851_-3800_6928
+    landUse: 0
+  - stableKey: -5851_-3837_6928
+    landUse: 0
+  - stableKey: -6850_-3874_6928
+    landUse: 0
+  - stableKey: 1252_-4305_7270
+    landUse: 0
+  - stableKey: 6424_-4601_9063
+    landUse: 1
+  - stableKey: 5108_-4566_7225
+    landUse: 0
+  - stableKey: 220_-4569_7573
+    landUse: 0
+  - stableKey: 2586_-4855_8877
+    landUse: 1
+  - stableKey: -816_-4686_6927
+    landUse: 0
+  - stableKey: -1815_-4723_6928
+    landUse: 0
+  - stableKey: -2814_-4760_6928
+    landUse: 0
+  - stableKey: -3814_-4797_6928
+    landUse: 0
+  - stableKey: -4813_-4834_6927
+    landUse: 0
+  - stableKey: -5250_-6348_87633
+    landUse: 1
+  - stableKey: 4118_-5180_9975
+    landUse: 1
+  - stableKey: -7811_-4945_6928
+    landUse: 0
+  - stableKey: -8810_-4982_6928
+    landUse: 1
+  - stableKey: 1495_-5256_8295
+    landUse: 0
+  - stableKey: 5637_-5414_7225
+    landUse: 0
+  - stableKey: 339_-5540_9321
+    landUse: 0
+  - stableKey: 2938_-5788_10006
+    landUse: 0
+  - stableKey: -1261_-6186_34225
+    landUse: 1
+  - stableKey: -2778_-5742_7225
+    landUse: 0
+  - stableKey: -3777_-5779_7225
+    landUse: 0
+  - stableKey: 4590_-6058_11091
+    landUse: 0
+  - stableKey: 1743_-6224_9021
+    landUse: 0
+  - stableKey: 461_-6527_10766
+    landUse: 0
+  - stableKey: 3289_-6722_11136
+    landUse: 0
+  - stableKey: -2741_-6741_7225
+    landUse: 0
+  - stableKey: 1990_-7191_9746
+    landUse: 1
+  - stableKey: -2704_-7741_7225
+    landUse: 1
+  - stableKey: -5702_-7852_7225
+    landUse: 0

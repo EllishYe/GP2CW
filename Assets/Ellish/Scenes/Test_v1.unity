@@ -357,6 +357,8 @@ MonoBehaviour:
   roadMeshHeight: 0.01
   roadMaterial: {fileID: 2100000, guid: 7b48370343f2ced44b6ae1b3961855fb, type: 2}
   roadMeshObjectName: Road_Surface_Mesh
+  addRoadMeshCollider: 1
+  roadLayerName: Road
   roadMeshObject: {fileID: 0}
   lanes: []
   agentLanes: []
@@ -813,6 +815,65 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &2007563326
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2007563328}
+  - component: {fileID: 2007563327}
+  m_Layer: 0
+  m_Name: BlockAreaGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2007563327
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2007563326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 458919e609300814db8972dc3ca45d0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockAreaGenerator
+  generateBlockMeshes: 1
+  blockMeshHeight: 0.015
+  minBlockArea: 25
+  excludeMapEdgeBlocks: 1
+  parkProbability: 0.12
+  parkMinArea: 12000
+  parkMinVertexCount: 10
+  randomSeed: 12345
+  buildingBlockMaterial: {fileID: 0}
+  parkBlockMaterial: {fileID: 0}
+  addBlockMeshCollider: 1
+  buildingBlockLayerName: 
+  parkBlockLayerName: Walkable
+  blockGenerationProfile: {fileID: 0}
+  blocks: []
+--- !u!4 &2007563328
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2007563326}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2126160876
 GameObject:
   m_ObjectHideFlags: 0
@@ -845,6 +906,7 @@ MonoBehaviour:
   roadNetworkGenerator: {fileID: 995044733}
   walkableAreaGenerator: {fileID: 1673490178}
   crosswalkGenerator: {fileID: 178551622}
+  blockAreaGenerator: {fileID: 2007563327}
   generateRoadsOnStart: 0
   generatedRootName: GeneratedCity
   roadRootName: Road
@@ -882,4 +944,5 @@ SceneRoots:
   - {fileID: 995044734}
   - {fileID: 1673490179}
   - {fileID: 178551623}
+  - {fileID: 2007563328}
   - {fileID: 2126160878}

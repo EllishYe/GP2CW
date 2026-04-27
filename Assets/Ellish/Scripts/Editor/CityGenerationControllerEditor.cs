@@ -81,6 +81,29 @@ public class CityGenerationControllerEditor : Editor
 
         using (new EditorGUILayout.HorizontalScope())
         {
+            if (GUILayout.Button("Apply Block Overrides"))
+            {
+                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Apply Block Overrides");
+                controller.ApplyBlockDebugOverrides();
+                EditorUtility.SetDirty(controller);
+            }
+            if (GUILayout.Button("Save Block Overrides"))
+            {
+                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Save Block Overrides");
+                controller.SaveBlockDebugOverrides();
+                EditorUtility.SetDirty(controller);
+            }
+        }
+
+        if (GUILayout.Button("Clear Saved Block Overrides"))
+        {
+            Undo.RecordObject(controller, "Clear Saved Block Overrides");
+            controller.ClearSavedBlockOverrides();
+            EditorUtility.SetDirty(controller);
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
             if (GUILayout.Button("Generate Lots"))
             {
                 Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Generate Lots");

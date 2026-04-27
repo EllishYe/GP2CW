@@ -6,6 +6,7 @@ public class CityGenerationController : MonoBehaviour
     public RoadNetworkGenerator roadNetworkGenerator;
     public WalkableAreaGenerator walkableAreaGenerator;
     public CrosswalkGenerator crosswalkGenerator;
+    public BlockAreaGenerator blockAreaGenerator;
 
     [Header("Runtime")]
     public bool generateRoadsOnStart = false;
@@ -48,6 +49,8 @@ public class CityGenerationController : MonoBehaviour
             walkableAreaGenerator = GetComponentInChildren<WalkableAreaGenerator>();
         if (crosswalkGenerator == null)
             crosswalkGenerator = GetComponentInChildren<CrosswalkGenerator>();
+        if (blockAreaGenerator == null)
+            blockAreaGenerator = GetComponentInChildren<BlockAreaGenerator>();
     }
 
     public void EnsureGeneratedHierarchy()
@@ -105,13 +108,46 @@ public class CityGenerationController : MonoBehaviour
     public void GenerateBlocks()
     {
         EnsureGeneratedHierarchy();
-        Debug.LogWarning("CityGenerationController: Block generation is not implemented yet.");
+        FindStageGenerators();
+
+        if (blockAreaGenerator == null)
+            blockAreaGenerator = gameObject.AddComponent<BlockAreaGenerator>();
+
+        blockAreaGenerator.Generate(roadNetworkGenerator, blockRoot);
     }
 
     public void ClearBlocks()
     {
         EnsureGeneratedHierarchy();
+        if (blockAreaGenerator != null)
+            blockAreaGenerator.Clear(blockRoot);
         ClearChildren(blockRoot);
+    }
+
+    public void ApplyBlockDebugOverrides()
+    {
+        EnsureGeneratedHierarchy();
+        if (blockAreaGenerator != null)
+        {
+            blockAreaGenerator.generatedBlockRoot = blockRoot;
+            blockAreaGenerator.ApplyDebugOverridesFromScene();
+        }
+    }
+
+    public void SaveBlockDebugOverrides()
+    {
+        EnsureGeneratedHierarchy();
+        if (blockAreaGenerator != null)
+        {
+            blockAreaGenerator.generatedBlockRoot = blockRoot;
+            blockAreaGenerator.SaveDebugOverridesToProfile();
+        }
+    }
+
+    public void ClearSavedBlockOverrides()
+    {
+        if (blockAreaGenerator != null)
+            blockAreaGenerator.ClearSavedOverrides();
     }
 
     public void GenerateLots()
