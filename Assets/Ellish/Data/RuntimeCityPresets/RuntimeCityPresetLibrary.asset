@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: RuntimeCityPresetLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::RuntimeCityPresetLibrary
+  presets:
+  - presetName: Preset-01
+    seed: 12345
+    mapSize: 500
+    roadSegmentLength: 75
+    majorRoadCount: 200
+    minorRoadCount: 800
+    branchProbability: 0.1
+    deletionProbability: 0.2
+    laneWidth: 4
+    parkProbability: 0
+    parkMinArea: 20000
+    parkIrregularityThreshold: 0.3
+    assignmentMode: 2
+    defaultBuildingType: 3
+    residentialWeight: 0.45
+    commercialWeight: 0.25
+    industrialWeight: 0.3
+    commercialInnerNormalizedRadius: 0.5
+    residentialMiddleNormalizedRadius: 0.75
+    residential:
+      minHeight: 12
+      maxHeight: 28
+      buildingSetback: 3
+    commercial:
+      minHeight: 20
+      maxHeight: 60
+      buildingSetback: 2
+    industrial:
+      minHeight: 5
+      maxHeight: 14
+      buildingSetback: 4

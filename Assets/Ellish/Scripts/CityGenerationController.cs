@@ -13,6 +13,10 @@ public class CityGenerationController : MonoBehaviour
     [Header("Runtime")]
     public bool generateRoadsOnStart = false;
 
+    [Header("Runtime UI Presets")]
+    public RuntimeCityPresetLibrary runtimePresetLibrary;
+    public string runtimePresetName = "Runtime Preset";
+
     [Header("Generated Hierarchy")]
     public string generatedRootName = "GeneratedCity";
     public string roadRootName = "Road";

@@ -273,10 +273,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RuntimeCityGenerationUI
   controller: {fileID: 2126160877}
-  targetCanvas: {fileID: 0}
+  targetCanvas: {fileID: 1403903617}
   panelSize: {x: 360, y: 760}
   panelOffset: {x: 16, y: -16}
-  referenceResolution: {x: 1920, y: 1080}
+  uiScale: 1
   uiFont: {fileID: 0}
   buildOnStart: 1
   presets: []

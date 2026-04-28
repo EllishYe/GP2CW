@@ -4,6 +4,9 @@ using UnityEngine;
 [CustomEditor(typeof(CityGenerationController))]
 public class CityGenerationControllerEditor : Editor
 {
+    private const string DefaultRuntimePresetFolder = "Assets/Ellish/Data/RuntimeCityPresets";
+    private const string DefaultRuntimePresetPath = DefaultRuntimePresetFolder + "/RuntimeCityPresetLibrary.asset";
+
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
@@ -87,6 +90,10 @@ public class CityGenerationControllerEditor : Editor
             DrawButton(controller, "Clear All", "Clear All City Stages", true, () =>
                 controller.ClearAll());
         }
+
+        DrawSection("Runtime UI Presets");
+        DrawButton(controller, "Save Current Settings as Runtime Preset", "Save Runtime Preset", false, () =>
+            SaveCurrentSettingsAsRuntimePreset(controller));
     }
 
     private static void DrawSection(string label)
@@ -107,5 +114,57 @@ public class CityGenerationControllerEditor : Editor
 
         action?.Invoke();
         EditorUtility.SetDirty(controller);
+    }
+
+    private static void SaveCurrentSettingsAsRuntimePreset(CityGenerationController controller)
+    {
+        if (controller == null)
+            return;
+
+        RuntimeCityPresetLibrary library = EnsureRuntimePresetLibrary(controller);
+        if (library == null)
+            return;
+
+        RuntimeCityPreset preset = RuntimeCityPreset.CreateFromController(controller, controller.runtimePresetName);
+        Undo.RecordObject(library, "Save Runtime City Preset");
+        library.AddOrReplace(preset);
+
+        EditorUtility.SetDirty(library);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        Debug.Log($"CityGenerationController: Saved runtime preset '{preset.presetName}' to {AssetDatabase.GetAssetPath(library)}.");
+    }
+
+    private static RuntimeCityPresetLibrary EnsureRuntimePresetLibrary(CityGenerationController controller)
+    {
+        if (controller.runtimePresetLibrary != null)
+            return controller.runtimePresetLibrary;
+
+        RuntimeCityPresetLibrary library = AssetDatabase.LoadAssetAtPath<RuntimeCityPresetLibrary>(DefaultRuntimePresetPath);
+        if (library == null)
+        {
+            EnsureFolder(DefaultRuntimePresetFolder);
+            library = CreateInstance<RuntimeCityPresetLibrary>();
+            AssetDatabase.CreateAsset(library, DefaultRuntimePresetPath);
+        }
+
+        Undo.RecordObject(controller, "Assign Runtime Preset Library");
+        controller.runtimePresetLibrary = library;
+        EditorUtility.SetDirty(controller);
+        return library;
+    }
+
+    private static void EnsureFolder(string folderPath)
+    {
+        string[] parts = folderPath.Split('/');
+        string current = parts[0];
+        for (int i = 1; i < parts.Length; i++)
+        {
+            string next = current + "/" + parts[i];
+            if (!AssetDatabase.IsValidFolder(next))
+                AssetDatabase.CreateFolder(current, parts[i]);
+            current = next;
+        }
     }
 }
