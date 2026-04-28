@@ -20,13 +20,6 @@ public class CityGenerationControllerEditor : Editor
             EditorUtility.SetDirty(controller);
         }
 
-        if (GUILayout.Button("Refresh Lot Test Reference"))
-        {
-            Undo.RecordObject(controller, "Refresh Lot Test Reference");
-            controller.RefreshLotTestGeneratorReference();
-            EditorUtility.SetDirty(controller);
-        }
-
         if (GUILayout.Button("Ensure Generated Hierarchy"))
         {
             Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Ensure Generated Hierarchy");
@@ -107,6 +100,38 @@ public class CityGenerationControllerEditor : Editor
             Undo.RecordObject(controller, "Clear Saved Block Overrides");
             controller.ClearSavedBlockOverrides();
             EditorUtility.SetDirty(controller);
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("Assign Block Types"))
+            {
+                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Assign Block Types");
+                controller.AssignBlockTypes();
+                EditorUtility.SetDirty(controller);
+            }
+            if (GUILayout.Button("Apply Type Overrides"))
+            {
+                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Apply Block Type Overrides");
+                controller.ApplyBlockTypeOverrides();
+                EditorUtility.SetDirty(controller);
+            }
+        }
+
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            if (GUILayout.Button("Save Type Overrides"))
+            {
+                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Save Block Type Overrides");
+                controller.SaveBlockTypeOverrides();
+                EditorUtility.SetDirty(controller);
+            }
+            if (GUILayout.Button("Clear Saved Type Overrides"))
+            {
+                Undo.RecordObject(controller, "Clear Saved Block Type Overrides");
+                controller.ClearSavedBlockTypeOverrides();
+                EditorUtility.SetDirty(controller);
+            }
         }
 
         using (new EditorGUILayout.HorizontalScope())

@@ -13,3 +13,11 @@ public enum BlockTypeAssignmentMode
     RandomWeighted,
     DistanceToCenter
 }
+
+public enum UrbanBlockTypeOverride
+{
+    Auto,
+    Residential,
+    Commercial,
+    Industrial
+}

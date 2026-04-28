@@ -9,7 +9,6 @@ public class CityGenerationController : MonoBehaviour
     public BlockAreaGenerator blockAreaGenerator;
     public LotAreaGenerator lotAreaGenerator;
     public LotBuildingGenerator lotBuildingGenerator;
-    public LotTestGenerator lotTestGenerator;
 
     [Header("Runtime")]
     public bool generateRoadsOnStart = false;
@@ -58,24 +57,6 @@ public class CityGenerationController : MonoBehaviour
             lotAreaGenerator = GetComponentInChildren<LotAreaGenerator>();
         if (lotBuildingGenerator == null)
             lotBuildingGenerator = GetComponentInChildren<LotBuildingGenerator>();
-        if (lotTestGenerator == null)
-            lotTestGenerator = GetComponentInChildren<LotTestGenerator>();
-        if (lotTestGenerator == null)
-            lotTestGenerator = FindExistingLotTestGeneratorInScene();
-    }
-
-    public void RefreshLotTestGeneratorReference()
-    {
-        LotTestGenerator configuredLotTestGenerator = FindConfiguredLotTestGeneratorInScene();
-        if (configuredLotTestGenerator != null)
-        {
-            lotTestGenerator = configuredLotTestGenerator;
-            return;
-        }
-
-        lotTestGenerator = GetComponentInChildren<LotTestGenerator>();
-        if (lotTestGenerator == null)
-            lotTestGenerator = FindExistingLotTestGeneratorInScene();
     }
 
     public void EnsureGeneratedHierarchy()
@@ -175,6 +156,49 @@ public class CityGenerationController : MonoBehaviour
             blockAreaGenerator.ClearSavedOverrides();
     }
 
+    public void AssignBlockTypes()
+    {
+        EnsureGeneratedHierarchy();
+        FindStageGenerators();
+
+        if (lotAreaGenerator == null)
+            lotAreaGenerator = gameObject.AddComponent<LotAreaGenerator>();
+
+        if (blockAreaGenerator == null || blockAreaGenerator.blocks == null || blockAreaGenerator.blocks.Count == 0)
+        {
+            Debug.LogWarning("CityGenerationController: Generate blocks before assigning block types.");
+            return;
+        }
+
+        lotAreaGenerator.AssignBlockTypes(blockAreaGenerator, roadNetworkGenerator);
+    }
+
+    public void ApplyBlockTypeOverrides()
+    {
+        EnsureGeneratedHierarchy();
+        FindStageGenerators();
+
+        if (lotAreaGenerator != null && blockAreaGenerator != null)
+            lotAreaGenerator.ApplyBlockTypeOverridesFromScene(blockAreaGenerator);
+    }
+
+    public void SaveBlockTypeOverrides()
+    {
+        EnsureGeneratedHierarchy();
+        FindStageGenerators();
+
+        if (lotAreaGenerator != null && blockAreaGenerator != null)
+            lotAreaGenerator.SaveBlockTypeOverridesToProfile(blockAreaGenerator);
+    }
+
+    public void ClearSavedBlockTypeOverrides()
+    {
+        FindStageGenerators();
+
+        if (lotAreaGenerator != null && blockAreaGenerator != null)
+            lotAreaGenerator.ClearSavedBlockTypeOverrides(blockAreaGenerator);
+    }
+
     public void GenerateLots()
     {
         EnsureGeneratedHierarchy();
@@ -189,7 +213,11 @@ public class CityGenerationController : MonoBehaviour
             return;
         }
 
-        lotAreaGenerator.Generate(blockAreaGenerator, roadNetworkGenerator);
+        if (!HasAssignedBlockTypes())
+            lotAreaGenerator.AssignBlockTypes(blockAreaGenerator, roadNetworkGenerator);
+
+        lotAreaGenerator.ApplyBlockTypeOverridesFromScene(blockAreaGenerator);
+        lotAreaGenerator.BuildLotsFromAssignedBlockTypes(blockAreaGenerator, roadNetworkGenerator);
 
         if (lotBuildingGenerator == null)
             lotBuildingGenerator = gameObject.AddComponent<LotBuildingGenerator>();
@@ -204,8 +232,6 @@ public class CityGenerationController : MonoBehaviour
             lotAreaGenerator.Clear();
         if (lotBuildingGenerator != null)
             lotBuildingGenerator.Clear(lotRoot);
-        if (lotTestGenerator != null)
-            lotTestGenerator.Clear(lotRoot);
         ClearChildren(lotRoot);
     }
 
@@ -250,30 +276,19 @@ public class CityGenerationController : MonoBehaviour
         }
     }
 
-    private static LotTestGenerator FindExistingLotTestGeneratorInScene()
+    private bool HasAssignedBlockTypes()
     {
-#if UNITY_2023_1_OR_NEWER
-        return Object.FindFirstObjectByType<LotTestGenerator>(FindObjectsInactive.Include);
-#else
-        return Object.FindObjectOfType<LotTestGenerator>(true);
-#endif
-    }
+        if (blockAreaGenerator == null || blockAreaGenerator.blocks == null)
+            return false;
 
-    private static LotTestGenerator FindConfiguredLotTestGeneratorInScene()
-    {
-#if UNITY_2023_1_OR_NEWER
-        LotTestGenerator[] generators = Object.FindObjectsByType<LotTestGenerator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-#else
-        LotTestGenerator[] generators = Object.FindObjectsOfType<LotTestGenerator>(true);
-#endif
-        for (int i = 0; i < generators.Length; i++)
+        for (int i = 0; i < blockAreaGenerator.blocks.Count; i++)
         {
-            LotTestGenerator generator = generators[i];
-            if (generator != null && (generator.buildingMaterial != null || generator.parkMaterial != null))
-                return generator;
+            BlockData block = blockAreaGenerator.blocks[i];
+            if (block != null && block.IsBuilding && block.urbanBlockType != UrbanBlockType.Default)
+                return true;
         }
 
-        return null;
+        return false;
     }
 
 }

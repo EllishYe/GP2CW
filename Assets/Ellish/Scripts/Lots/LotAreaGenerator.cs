@@ -29,11 +29,18 @@ public class LotAreaGenerator : MonoBehaviour
     public bool applyCenterHeightFalloff = true;
     [Range(0f, 1f)] public float edgeHeightMultiplier = 0.45f;
 
+    [Header("Block Type Preview")]
+    public Color residentialBlockPreviewColor = new Color(0.78f, 0.70f, 0.62f, 1f);
+    public Color commercialBlockPreviewColor = new Color(0.42f, 0.54f, 0.68f, 1f);
+    public Color industrialBlockPreviewColor = new Color(0.56f, 0.56f, 0.52f, 1f);
+
     [Header("Profiles")]
     public List<UrbanBlockTypeProfile> typeProfiles = new List<UrbanBlockTypeProfile>();
 
     [Header("Generated Data")]
     public List<LotData> lots = new List<LotData>();
+
+    private readonly Dictionary<UrbanBlockType, Material> blockPreviewMaterials = new Dictionary<UrbanBlockType, Material>();
 
     void Reset()
     {
@@ -64,13 +71,11 @@ public class LotAreaGenerator : MonoBehaviour
         blockAreaGenerator.ApplyDebugOverridesFromScene();
         EnsureDefaultProfiles();
 
-        List<BlockData> buildingBlocks = blockAreaGenerator.GetBuildingBlocks();
-        System.Random random = new System.Random(randomSeed);
-        float mapExtent = roadNetworkGenerator != null ? Mathf.Max(1f, roadNetworkGenerator.mapSize) : 1f;
-        AssignBlockTypes(buildingBlocks, roadNetworkGenerator, random);
-        BuildLots(buildingBlocks, random, mapExtent);
+        AssignBlockTypes(blockAreaGenerator, roadNetworkGenerator);
+        ApplyBlockTypeOverridesFromScene(blockAreaGenerator);
+        BuildLotsFromAssignedBlockTypes(blockAreaGenerator, roadNetworkGenerator);
 
-        Debug.Log($"LotAreaGenerator: Generated {lots.Count} lot(s) from {buildingBlocks.Count} building block(s).");
+        Debug.Log($"LotAreaGenerator: Generated {lots.Count} lot(s) from {blockAreaGenerator.GetBuildingBlocks().Count} building block(s).");
     }
 
     public void Clear()
@@ -99,16 +104,153 @@ public class LotAreaGenerator : MonoBehaviour
         return fallback;
     }
 
-    private void AssignBlockTypes(List<BlockData> buildingBlocks, RoadNetworkGenerator roadNetworkGenerator, System.Random random)
+    public void AssignBlockTypes(BlockAreaGenerator blockAreaGenerator, RoadNetworkGenerator roadNetworkGenerator)
     {
-        float mapExtent = roadNetworkGenerator != null ? Mathf.Max(1f, roadNetworkGenerator.mapSize) : 1f;
+        if (blockAreaGenerator == null)
+        {
+            Debug.LogWarning("LotAreaGenerator: BlockAreaGenerator is not assigned.");
+            return;
+        }
 
+        blockAreaGenerator.ApplyDebugOverridesFromScene();
+        EnsureDefaultProfiles();
+
+        List<BlockData> buildingBlocks = blockAreaGenerator.GetBuildingBlocks();
+        System.Random random = new System.Random(randomSeed);
+        float mapExtent = roadNetworkGenerator != null ? Mathf.Max(1f, roadNetworkGenerator.mapSize) : 1f;
+        AssignBlockTypes(buildingBlocks, blockAreaGenerator.blockGenerationProfile, mapExtent, random);
+
+        Debug.Log($"LotAreaGenerator: Assigned block types for {buildingBlocks.Count} building block(s).");
+    }
+
+    public void ApplyBlockTypeOverridesFromScene(BlockAreaGenerator blockAreaGenerator)
+    {
+        if (blockAreaGenerator == null)
+        {
+            Debug.LogWarning("LotAreaGenerator: BlockAreaGenerator is not assigned.");
+            return;
+        }
+
+        BlockDebugComponent[] debugComponents = CollectBlockDebugComponents(blockAreaGenerator);
+        if (debugComponents.Length == 0)
+        {
+            Debug.LogWarning("LotAreaGenerator: No BlockDebugComponent found. Generate blocks before applying block type overrides.");
+            return;
+        }
+
+        for (int i = 0; i < debugComponents.Length; i++)
+        {
+            BlockDebugComponent debug = debugComponents[i];
+            BlockData block = FindBlockByStableKey(blockAreaGenerator, debug.stableKey);
+            if (block == null)
+                continue;
+
+            UrbanBlockType effectiveType = debug.EffectiveUrbanBlockType;
+            if (block.landUse == BlockLandUse.Park || effectiveType == UrbanBlockType.Park)
+                effectiveType = UrbanBlockType.Park;
+            else if (effectiveType == UrbanBlockType.Default)
+                effectiveType = defaultBuildingType == UrbanBlockType.Park ? UrbanBlockType.Residential : defaultBuildingType;
+
+            block.urbanBlockType = effectiveType;
+            debug.urbanBlockType = effectiveType;
+            ApplyBlockTypePresentation(block);
+        }
+
+        Debug.Log($"LotAreaGenerator: Applied block type overrides from {debugComponents.Length} block debug component(s).");
+    }
+
+    public void SaveBlockTypeOverridesToProfile(BlockAreaGenerator blockAreaGenerator)
+    {
+        if (blockAreaGenerator == null)
+        {
+            Debug.LogWarning("LotAreaGenerator: BlockAreaGenerator is not assigned.");
+            return;
+        }
+
+        BlockGenerationProfile profile = blockAreaGenerator.blockGenerationProfile;
+        if (profile == null)
+        {
+            Debug.LogWarning("LotAreaGenerator: BlockGenerationProfile is not assigned on BlockAreaGenerator.");
+            return;
+        }
+
+        ApplyBlockTypeOverridesFromScene(blockAreaGenerator);
+
+        int savedCount = 0;
+        BlockDebugComponent[] debugComponents = CollectBlockDebugComponents(blockAreaGenerator);
+        for (int i = 0; i < debugComponents.Length; i++)
+        {
+            BlockDebugComponent debug = debugComponents[i];
+            UrbanBlockType type = debug.EffectiveUrbanBlockType;
+            if (debug.EffectiveLandUse == BlockLandUse.Park || debug.urbanBlockTypeOverride == UrbanBlockTypeOverride.Auto)
+            {
+                profile.RemoveUrbanBlockTypeOverride(debug.stableKey);
+                continue;
+            }
+
+            if (type == UrbanBlockType.Park || type == UrbanBlockType.Default)
+                continue;
+
+            profile.SetUrbanBlockTypeOverride(debug.stableKey, type);
+            savedCount++;
+        }
+
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(profile);
+        UnityEditor.AssetDatabase.SaveAssets();
+#endif
+
+        Debug.Log($"LotAreaGenerator: Saved {savedCount} block type override(s) to {profile.name}.");
+    }
+
+    public void ClearSavedBlockTypeOverrides(BlockAreaGenerator blockAreaGenerator)
+    {
+        if (blockAreaGenerator == null || blockAreaGenerator.blockGenerationProfile == null)
+            return;
+
+        blockAreaGenerator.blockGenerationProfile.ClearUrbanBlockTypeOverrides();
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(blockAreaGenerator.blockGenerationProfile);
+        UnityEditor.AssetDatabase.SaveAssets();
+#endif
+    }
+
+    public void BuildLotsFromAssignedBlockTypes(BlockAreaGenerator blockAreaGenerator, RoadNetworkGenerator roadNetworkGenerator)
+    {
+        Clear();
+
+        if (blockAreaGenerator == null)
+        {
+            Debug.LogWarning("LotAreaGenerator: BlockAreaGenerator is not assigned.");
+            return;
+        }
+
+        List<BlockData> buildingBlocks = blockAreaGenerator.GetBuildingBlocks();
+        System.Random random = new System.Random(randomSeed);
+        float mapExtent = roadNetworkGenerator != null ? Mathf.Max(1f, roadNetworkGenerator.mapSize) : 1f;
+        BuildLots(buildingBlocks, random, mapExtent);
+    }
+
+    private void AssignBlockTypes(List<BlockData> buildingBlocks, BlockGenerationProfile profile, float mapExtent, System.Random random)
+    {
         for (int i = 0; i < buildingBlocks.Count; i++)
         {
             BlockData block = buildingBlocks[i];
-            block.urbanBlockType = ResolveBlockType(block, random, mapExtent);
-            SyncDebugUrbanBlockType(block);
+            UrbanBlockType generatedType = ResolveBlockType(block, random, mapExtent);
+            bool hasSavedOverride = TryResolveSavedBlockType(profile, block.stableKey, out UrbanBlockType savedType);
+            block.urbanBlockType = hasSavedOverride ? savedType : generatedType;
+            SyncDebugUrbanBlockType(block, hasSavedOverride ? ToOverride(block.urbanBlockType) : UrbanBlockTypeOverride.Auto);
+            ApplyBlockTypePresentation(block);
         }
+    }
+
+    private bool TryResolveSavedBlockType(BlockGenerationProfile profile, string stableKey, out UrbanBlockType savedType)
+    {
+        if (profile != null && profile.TryGetUrbanBlockTypeOverride(stableKey, out savedType))
+            return true;
+
+        savedType = UrbanBlockType.Default;
+        return false;
     }
 
     private UrbanBlockType ResolveBlockType(BlockData block, System.Random random, float mapExtent)
@@ -465,14 +607,128 @@ public class LotAreaGenerator : MonoBehaviour
         return new Vector2((float)(centroidX / ClipperScale), (float)(centroidY / ClipperScale));
     }
 
-    private void SyncDebugUrbanBlockType(BlockData block)
+    private void SyncDebugUrbanBlockType(BlockData block, UrbanBlockTypeOverride overrideState = UrbanBlockTypeOverride.Auto)
     {
         if (block.meshObject == null)
             return;
 
         BlockDebugComponent debug = block.meshObject.GetComponent<BlockDebugComponent>();
         if (debug != null)
+        {
             debug.urbanBlockType = block.urbanBlockType;
+            debug.urbanBlockTypeOverride = overrideState;
+        }
+    }
+
+    private static UrbanBlockTypeOverride ToOverride(UrbanBlockType type)
+    {
+        switch (type)
+        {
+            case UrbanBlockType.Commercial:
+                return UrbanBlockTypeOverride.Commercial;
+            case UrbanBlockType.Industrial:
+                return UrbanBlockTypeOverride.Industrial;
+            case UrbanBlockType.Residential:
+                return UrbanBlockTypeOverride.Residential;
+            default:
+                return UrbanBlockTypeOverride.Auto;
+        }
+    }
+
+    private void ApplyBlockTypePresentation(BlockData block)
+    {
+        if (block == null || block.meshObject == null)
+            return;
+
+        MeshRenderer meshRenderer = block.meshObject.GetComponent<MeshRenderer>();
+        if (meshRenderer == null)
+            return;
+
+        UrbanBlockTypeProfile profile = GetProfile(block.urbanBlockType);
+        if (profile != null && profile.blockMaterial != null)
+        {
+            meshRenderer.sharedMaterial = profile.blockMaterial;
+            return;
+        }
+
+        if (block.urbanBlockType == UrbanBlockType.Residential ||
+            block.urbanBlockType == UrbanBlockType.Commercial ||
+            block.urbanBlockType == UrbanBlockType.Industrial)
+        {
+            meshRenderer.sharedMaterial = GetFallbackBlockPreviewMaterial(block.urbanBlockType);
+        }
+    }
+
+    private Material GetFallbackBlockPreviewMaterial(UrbanBlockType type)
+    {
+        if (blockPreviewMaterials.TryGetValue(type, out Material material) && material != null)
+            return material;
+
+        material = CreateFallbackMaterial($"Default {type} Block Preview Material", GetFallbackBlockPreviewColor(type));
+        blockPreviewMaterials[type] = material;
+        return material;
+    }
+
+    private Color GetFallbackBlockPreviewColor(UrbanBlockType type)
+    {
+        switch (type)
+        {
+            case UrbanBlockType.Commercial:
+                return commercialBlockPreviewColor;
+            case UrbanBlockType.Industrial:
+                return industrialBlockPreviewColor;
+            default:
+                return residentialBlockPreviewColor;
+        }
+    }
+
+    private static Material CreateFallbackMaterial(string materialName, Color color)
+    {
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null)
+            shader = Shader.Find("Standard");
+        if (shader == null)
+            shader = Shader.Find("Sprites/Default");
+
+        Material material = new Material(shader);
+        material.name = materialName;
+        if (material.HasProperty("_BaseColor"))
+            material.SetColor("_BaseColor", color);
+        if (material.HasProperty("_Color"))
+            material.SetColor("_Color", color);
+
+        return material;
+    }
+
+    private static BlockDebugComponent[] CollectBlockDebugComponents(BlockAreaGenerator blockAreaGenerator)
+    {
+        if (blockAreaGenerator.generatedBlockRoot != null)
+            return blockAreaGenerator.generatedBlockRoot.GetComponentsInChildren<BlockDebugComponent>(true);
+
+        List<BlockDebugComponent> collected = new List<BlockDebugComponent>();
+        for (int i = 0; i < blockAreaGenerator.blocks.Count; i++)
+        {
+            GameObject meshObject = blockAreaGenerator.blocks[i].meshObject;
+            if (meshObject == null)
+                continue;
+
+            BlockDebugComponent debug = meshObject.GetComponent<BlockDebugComponent>();
+            if (debug != null)
+                collected.Add(debug);
+        }
+
+        return collected.ToArray();
+    }
+
+    private static BlockData FindBlockByStableKey(BlockAreaGenerator blockAreaGenerator, string stableKey)
+    {
+        for (int i = 0; i < blockAreaGenerator.blocks.Count; i++)
+        {
+            if (blockAreaGenerator.blocks[i].stableKey == stableKey)
+                return blockAreaGenerator.blocks[i];
+        }
+
+        return null;
     }
 
     private void EnsureDefaultProfiles()
