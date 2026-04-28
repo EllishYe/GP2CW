@@ -66,27 +66,25 @@ public class TestCityBuilder : MonoBehaviour
 
     IEnumerator CityGenerationPipeline()
     {
-        Debug.Log("🏗️ [阶段 1/5] 开始生成 PCG 骨架...");
+        Debug.Log("stage 1/5 start PCG");
         pcgGenerator.Generate();
 
-        Debug.Log("🏗️ [阶段 2/5] 翻译数据并生成物理车道...");
+        Debug.Log("stage 2/5 start lanes");
         BridgeDataAndSpawnCars(); 
-
-        // 🚨 极其关键的安全锁：强制 Unity 立刻刷新一次物理引擎的空间划分树！
+    
         Physics.SyncTransforms();
-        // 或者如果你求稳，也可以让代码停顿一帧： yield return new WaitForFixedUpdate();
 
-        Debug.Log("🏗️ [阶段 3/5] 交通局开始打通并接管全城路网...");
+        Debug.Log("stage 3/5 start traffic graph");
         myTrafficGraph.BuildGraphFromScene(); 
 
-        Debug.Log("🏗️ [阶段 4/5] 激活十字路口交警...");
+        Debug.Log("stage 4/5 generate intersection");
         IntersectionController[] allIntersections = FindObjectsByType<IntersectionController>(FindObjectsSortMode.None);
         foreach (var intersection in allIntersections)
         {
             intersection.AutoDetectIncomingLanes();
         }
 
-        Debug.Log("🏗️ [阶段 5/5] 烘焙行人 NavMesh...");
+        Debug.Log("stage 5/5  NavMesh");
         if (navMeshSurface != null)
         {
             navMeshSurface.BuildNavMesh();

@@ -11,7 +11,7 @@ public class VehicleAgent : MonoBehaviour
         Yielding        
     }
 
-    [Header("状态")]
+    [Header("States")]
     public CarState currentState = CarState.Driving; 
 
 

@@ -22,14 +22,14 @@ public class PedestrianAI : MonoBehaviour
 
         if (allOfficePOIs == null || allOfficePOIs.Length == 0)
         {
-            // 获取场景里所有挂了 PedestrianPOI 脚本的物体
+            // get all items with PedestrianPOI 
             PedestrianPOI[] poiScripts = Object.FindObjectsByType<PedestrianPOI>(FindObjectsSortMode.None);
             List<Transform> officeList = new List<Transform>();
 
-            // 遍历并只把 Office 类型的提取出来
+            // get office POI
             foreach (var poi in poiScripts)
             {
-                if (poi.type == PedestrianPOI.POIType.Office) // 确保你的枚举里有 Office 这个选项
+                if (poi.type == PedestrianPOI.POIType.Office) 
                 {
                     officeList.Add(poi.transform);
                 }
