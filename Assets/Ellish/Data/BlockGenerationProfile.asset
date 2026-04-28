@@ -195,3 +195,6 @@ MonoBehaviour:
     landUse: 1
   - stableKey: -5702_-7852_7225
     landUse: 0
+  urbanBlockTypeOverrides:
+  - stableKey: 3068_-2488_4013
+    urbanBlockType: 1

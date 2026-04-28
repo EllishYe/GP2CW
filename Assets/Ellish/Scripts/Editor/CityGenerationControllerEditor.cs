@@ -10,160 +10,102 @@ public class CityGenerationControllerEditor : Editor
 
         CityGenerationController controller = (CityGenerationController)target;
 
+        DrawSection("Setup");
+        DrawButton(controller, "Refresh Stage References", "Refresh Stage References", false, () =>
+            controller.FindStageGenerators());
+        DrawButton(controller, "Ensure Generated Hierarchy", "Ensure Generated Hierarchy", true, () =>
+            controller.EnsureGeneratedHierarchy());
+
+        DrawSection("Road Network");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Generate Roads", "Generate Roads", true, () =>
+                controller.GenerateRoads());
+            DrawButton(controller, "Clear Roads", "Clear Roads", true, () =>
+                controller.ClearRoads());
+        }
+
+        DrawSection("Walkable Areas");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Generate Walkable", "Generate Walkable", true, () =>
+                controller.GenerateWalkable());
+            DrawButton(controller, "Clear Walkable", "Clear Walkable", true, () =>
+                controller.ClearWalkable());
+        }
+
+        DrawSection("Blocks");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Generate Blocks", "Generate Blocks", true, () =>
+                controller.GenerateBlocks());
+            DrawButton(controller, "Clear Blocks", "Clear Blocks", true, () =>
+                controller.ClearBlocks());
+        }
+
+        DrawSection("Block Land Use Overrides");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Apply Land Use Overrides", "Apply Block Overrides", true, () =>
+                controller.ApplyBlockDebugOverrides());
+            DrawButton(controller, "Save Land Use Overrides", "Save Block Overrides", true, () =>
+                controller.SaveBlockDebugOverrides());
+        }
+        DrawButton(controller, "Clear Saved Land Use Overrides", "Clear Saved Block Overrides", false, () =>
+            controller.ClearSavedBlockOverrides());
+
+        DrawSection("Block Type Assignment");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Assign Block Types", "Assign Block Types", true, () =>
+                controller.AssignBlockTypes());
+            DrawButton(controller, "Apply Type Overrides", "Apply Block Type Overrides", true, () =>
+                controller.ApplyBlockTypeOverrides());
+        }
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Save Type Overrides", "Save Block Type Overrides", true, () =>
+                controller.SaveBlockTypeOverrides());
+            DrawButton(controller, "Clear Saved Type Overrides", "Clear Saved Block Type Overrides", false, () =>
+                controller.ClearSavedBlockTypeOverrides());
+        }
+
+        DrawSection("Lots & Buildings");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Generate Lots & Buildings", "Generate Lots", true, () =>
+                controller.GenerateLots());
+            DrawButton(controller, "Clear Lots & Buildings", "Clear Lots", true, () =>
+                controller.ClearLots());
+        }
+
+        DrawSection("Full Pipeline");
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            DrawButton(controller, "Generate All", "Generate All City Stages", true, () =>
+                controller.GenerateAll());
+            DrawButton(controller, "Clear All", "Clear All City Stages", true, () =>
+                controller.ClearAll());
+        }
+    }
+
+    private static void DrawSection(string label)
+    {
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Pipeline", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+    }
 
-        if (GUILayout.Button("Refresh Stage References"))
-        {
-            Undo.RecordObject(controller, "Refresh Stage References");
-            controller.FindStageGenerators();
-            EditorUtility.SetDirty(controller);
-        }
+    private static void DrawButton(CityGenerationController controller, string label, string undoName, bool fullHierarchyUndo, System.Action action)
+    {
+        if (!GUILayout.Button(label))
+            return;
 
-        if (GUILayout.Button("Ensure Generated Hierarchy"))
-        {
-            Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Ensure Generated Hierarchy");
-            controller.EnsureGeneratedHierarchy();
-            EditorUtility.SetDirty(controller);
-        }
+        if (fullHierarchyUndo)
+            Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, undoName);
+        else
+            Undo.RecordObject(controller, undoName);
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Roads", EditorStyles.boldLabel);
-
-        if (GUILayout.Button("Generate Roads"))
-        {
-            Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Generate Roads");
-            controller.GenerateRoads();
-            EditorUtility.SetDirty(controller);
-        }
-
-        if (GUILayout.Button("Clear Roads"))
-        {
-            Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Clear Roads");
-            controller.ClearRoads();
-            EditorUtility.SetDirty(controller);
-        }
-
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Future Stages", EditorStyles.boldLabel);
-
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (GUILayout.Button("Generate Walkable"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Generate Walkable");
-                controller.GenerateWalkable();
-                EditorUtility.SetDirty(controller);
-            }
-            if (GUILayout.Button("Clear Walkable"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Clear Walkable");
-                controller.ClearWalkable();
-                EditorUtility.SetDirty(controller);
-            }
-        }
-
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (GUILayout.Button("Generate Blocks"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Generate Blocks");
-                controller.GenerateBlocks();
-                EditorUtility.SetDirty(controller);
-            }
-            if (GUILayout.Button("Clear Blocks"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Clear Blocks");
-                controller.ClearBlocks();
-                EditorUtility.SetDirty(controller);
-            }
-        }
-
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (GUILayout.Button("Apply Block Overrides"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Apply Block Overrides");
-                controller.ApplyBlockDebugOverrides();
-                EditorUtility.SetDirty(controller);
-            }
-            if (GUILayout.Button("Save Block Overrides"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Save Block Overrides");
-                controller.SaveBlockDebugOverrides();
-                EditorUtility.SetDirty(controller);
-            }
-        }
-
-        if (GUILayout.Button("Clear Saved Block Overrides"))
-        {
-            Undo.RecordObject(controller, "Clear Saved Block Overrides");
-            controller.ClearSavedBlockOverrides();
-            EditorUtility.SetDirty(controller);
-        }
-
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (GUILayout.Button("Assign Block Types"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Assign Block Types");
-                controller.AssignBlockTypes();
-                EditorUtility.SetDirty(controller);
-            }
-            if (GUILayout.Button("Apply Type Overrides"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Apply Block Type Overrides");
-                controller.ApplyBlockTypeOverrides();
-                EditorUtility.SetDirty(controller);
-            }
-        }
-
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (GUILayout.Button("Save Type Overrides"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Save Block Type Overrides");
-                controller.SaveBlockTypeOverrides();
-                EditorUtility.SetDirty(controller);
-            }
-            if (GUILayout.Button("Clear Saved Type Overrides"))
-            {
-                Undo.RecordObject(controller, "Clear Saved Block Type Overrides");
-                controller.ClearSavedBlockTypeOverrides();
-                EditorUtility.SetDirty(controller);
-            }
-        }
-
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            if (GUILayout.Button("Generate Lots"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Generate Lots");
-                controller.GenerateLots();
-                EditorUtility.SetDirty(controller);
-            }
-            if (GUILayout.Button("Clear Lots"))
-            {
-                Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Clear Lots");
-                controller.ClearLots();
-                EditorUtility.SetDirty(controller);
-            }
-        }
-
-        EditorGUILayout.Space();
-
-        if (GUILayout.Button("Generate All"))
-        {
-            Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Generate All City Stages");
-            controller.GenerateAll();
-            EditorUtility.SetDirty(controller);
-        }
-
-        if (GUILayout.Button("Clear All"))
-        {
-            Undo.RegisterFullObjectHierarchyUndo(controller.gameObject, "Clear All City Stages");
-            controller.ClearAll();
-            EditorUtility.SetDirty(controller);
-        }
+        action?.Invoke();
+        EditorUtility.SetDirty(controller);
     }
 }
