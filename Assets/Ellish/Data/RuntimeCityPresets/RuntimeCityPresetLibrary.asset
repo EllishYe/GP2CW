@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 6f3c8b9a1d2e4f67b8c9012345abcde0, type: 3}
   m_Name: RuntimeCityPresetLibrary
   m_EditorClassIdentifier: Assembly-CSharp::RuntimeCityPresetLibrary
   presets:
