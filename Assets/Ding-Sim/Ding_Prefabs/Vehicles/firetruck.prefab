@@ -138,5 +138,5 @@ MonoBehaviour:
   currentState: 0
   maxSpeed: 0
   turnSpeed: 6
-  sensorLength: 2
+  sensorLength: 2.5
   sensorOffset: {x: 0, y: 0.5, z: 1.8}

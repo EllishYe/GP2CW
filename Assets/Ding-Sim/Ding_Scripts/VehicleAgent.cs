@@ -21,7 +21,7 @@ public class VehicleAgent : MonoBehaviour
     private float currentSpeed = 0f;  
 
     [Header("sensor")]
-    public float sensorLength = 4f;   
+    public float sensorLength = 8f;   
     public Vector3 sensorOffset = new Vector3(1, 0.5f, 1.8f); 
 
     private TrafficGraph cityGraph;

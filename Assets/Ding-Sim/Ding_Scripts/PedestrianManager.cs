@@ -65,6 +65,7 @@ public class PedestrianManager : MonoBehaviour
 
     public void SpawnCityPedestrians()
     {
+
         _pedestrianRoot = new GameObject("Pedestrian_Root").transform;
         // 1. find all POI in city
         PedestrianPOI[] allPOIScripts = Object.FindObjectsByType<PedestrianPOI>(FindObjectsSortMode.None);
@@ -85,34 +86,44 @@ public class PedestrianManager : MonoBehaviour
 
 
 
-        if (WorldTimeManager.Instance != null)
-        {
-            WorldTimeManager.Instance.OnHourChanged += HandleHourChanged;
-
-
-            float currentHour = WorldTimeManager.Instance.currentHour;
-            if (currentHour >= 7 && currentHour < 18)
-            {
-                StartCoroutine(SpawnRoutine());
-            }
-        }
+        StartCoroutine(SpawnAllAtHomeRoutine());
+        WorldTimeManager.Instance.OnHourChanged += HandleHourChanged;
     }
 
 
     private void HandleHourChanged(int hour)
     {
-        if (hour == 7) 
+        if (hour == 7)
         {
-
-            StopAllCoroutines();
-            StartCoroutine(SpawnRoutine());
+            //Debug.Log("大家起床去上班了！");
+            foreach (GameObject npc in _activePedestrians)
+            {
+                npc.GetComponent<PedestrianAI>().GoToWork();
+            }
         }
         else if (hour == 18)
         {
-            SendEveryoneHome();
+            //Debug.Log("下班回家！");
+            foreach (GameObject npc in _activePedestrians)
+            {
+                npc.GetComponent<PedestrianAI>().GoHome();
+            }
         }
     }
 
+    private IEnumerator SpawnAllAtHomeRoutine()
+    {
+        for (int i = 0; i < PedestrianCount; i++)
+        {
+            Transform homePoint = _homePoints[i % _homePoints.Count];
+            GameObject newPedestrian = Instantiate(GetRandomPesByWeight(), homePoint.position, Quaternion.identity);
+            newPedestrian.transform.SetParent(_pedestrianRoot);
+            newPedestrian.GetComponent<PedestrianAI>().InitHome(homePoint.position);
+            _activePedestrians.Add(newPedestrian);
+
+            yield return null; 
+        }
+    }
 
     private void SendEveryoneHome()
     {

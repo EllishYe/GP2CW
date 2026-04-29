@@ -6,6 +6,14 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Animator))]
 public class PedestrianAI : MonoBehaviour
 {
+    public float homeArrivalRadius = 10f;
+
+    [Header("Movement Range")]
+    public float wanderRadius = 5f; 
+
+    private Vector3 _currentCenterPos; 
+    private bool _isWorking = false;
+
     private NavMeshAgent agent;
     private Animator animator;
 
@@ -17,8 +25,8 @@ public class PedestrianAI : MonoBehaviour
 
     void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        animator = GetComponent<Animator>();
+        //agent = GetComponent<NavMeshAgent>();
+        //animator = GetComponent<Animator>();
 
         if (allOfficePOIs == null || allOfficePOIs.Length == 0)
         {
@@ -46,21 +54,23 @@ public class PedestrianAI : MonoBehaviour
         SetLogicalDestination();
     }
 
+    void Awake()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
+    }
+
+
     void Update()
     {
         animator.SetFloat("Speed", agent.velocity.magnitude);
 
-        if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
-        {
-            if (agent.hasPath && currentDestination != null)
+        if (agent != null && agent.isOnNavMesh)
+        {         
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.5f)
             {
-                Debug.DrawLine(transform.position + Vector3.up, currentDestination.position + Vector3.up, Color.green);
-            }
-
-
-            if (!_isGoingHome && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-            {
-
+               
+                Invoke("WanderToNewSpot", Random.Range(2f, 5f));
             }
         }
     }
@@ -97,15 +107,37 @@ public class PedestrianAI : MonoBehaviour
     public void InitHome(Vector3 homePosition)
     {
         _myHomePos = homePosition;
+        _currentCenterPos = _myHomePos; 
+        _isGoingHome = true;
+
+        WanderToNewSpot();
     }
 
-    // AFTER 18:00p.m.
+    public void GoToWork()
+    {
+        _isGoingHome = false;
+        _isWorking = true;
+        SetLogicalDestination(); 
+        _currentCenterPos = currentDestination.position;
+    }
+
     public void GoHome()
     {
+        _isWorking = false;
         _isGoingHome = true;
-        if (agent != null && agent.isOnNavMesh)
+        _currentCenterPos = _myHomePos;
+        agent.SetDestination(_myHomePos);
+    }
+
+    private void WanderToNewSpot()
+    {
+        if (!agent.isOnNavMesh) return;
+
+        Vector3 randomDest = _currentCenterPos + Random.insideUnitSphere * wanderRadius;
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(randomDest, out hit, wanderRadius, NavMesh.AllAreas))
         {
-            agent.SetDestination(_myHomePos);
+            agent.SetDestination(hit.position);
         }
     }
 }
